@@ -1,0 +1,1073 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>HONHO FACTORY QUEST</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout concept: a product tracker on top, one factory "window" per step, a quiet SOP panel below.
+   One committed look: night-shift foundry, molten orange against steel blue. */
+:root{
+  --bg:#0f141a; --panel:#18202a; --panel2:#202b38; --line:#2c394a;
+  --fg:#e8edf2; --muted:#93a1b3;
+  --ember:#ff7a1a; --ember2:#ffb15c; --alu:#cfd8e1; --cyan:#38c9dc;
+  --ok:#4fd08a; --bad:#ff5d5d; --hue:#38c9dc;
+  --f-display:"Barlow Condensed","Noto Sans TC",sans-serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[data-l]{display:none}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-block:14px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible,.dgi:focus-visible,.cwp:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.app{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{width:34px;height:34px;flex:none}
+.brand>div{min-width:0}
+.brand b{display:block;font-family:var(--f-display);font-size:clamp(14px,3.9vw,22px);letter-spacing:.04em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lang{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex:none}
+.lang button{background:transparent;border:0;padding:6px 12px;font-size:13px;color:var(--muted)}
+.lang button[aria-pressed=true]{background:var(--panel2);color:var(--fg)}
+
+.rail{display:grid;grid-template-columns:repeat(19,1fr);gap:3px}
+.seg{height:6px;border-radius:2px;background:var(--line)}
+.seg.done{background:var(--c)}
+.seg.cur{background:var(--c);box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--c);animation:blink 1.4s infinite}
+.railinfo{display:flex;justify-content:space-between;gap:8px;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.railinfo b{color:var(--hue);font-weight:500}
+
+.track{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 6px}
+.tn{display:flex;flex-direction:column;align-items:center;gap:2px;opacity:.4;position:relative;min-width:0;padding:2px}
+.tn svg,.tn img{width:clamp(28px,7vw,42px);height:auto}
+.tn small{font-size:10px;line-height:1.2;text-align:center;color:var(--muted)}
+.tn.done{opacity:.85}
+.tn.cur{opacity:1}
+.tn.cur small{color:var(--hue);font-weight:700}
+.tn.cur::after{content:"";position:absolute;inset:-2px;border:1.5px solid var(--hue);border-radius:8px;pointer-events:none}
+.tn.pop svg{animation:popin .7s}
+
+.scene{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#141b23;
+  height:clamp(400px,56vw + 140px,560px);animation:enter .4s ease both}
+.scene>.bg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene>.bgimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.play{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px;--u:clamp(110px,28vw,190px)}
+.scene.flash::after{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(79,208,138,.28),transparent 65%);animation:fl .8s ease-out forwards;pointer-events:none}
+.scene.shake .play{animation:shake .35s}
+.statepop{position:absolute;top:10px;right:10px;z-index:6;display:flex;align-items:center;gap:10px;background:rgba(15,20,26,.88);border:1px solid var(--ok);border-radius:12px;padding:6px 12px 6px 6px;pointer-events:none;animation:sp 2s ease forwards}
+.statepop svg,.statepop img{width:54px;height:54px}
+.statepop small{display:block;font-family:var(--f-mono);font-size:10px;color:var(--ok);letter-spacing:.06em}
+.statepop b{font-size:13px;font-weight:500}
+
+.obj{position:relative;width:var(--u);aspect-ratio:1;max-width:100%;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.obj svg,.obj img{width:100%;height:100%;display:block}
+.obj .ico{position:absolute;inset:0}
+.obj .l0,.obj .l1{position:absolute;inset:0}
+.obj.run{animation:wig .25s infinite alternate}
+.obj.big{--u:clamp(200px,62vw,290px)}
+.hot{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:2px solid var(--hue);background:rgba(15,20,26,.55);padding:0;animation:pulse 1.6s infinite}
+.hot.on{background:var(--ok);border-color:var(--ok);animation:none}
+.hot.on::after{content:"✓";color:#06210f;font-weight:700;font-size:16px;line-height:26px;display:block;text-align:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:28px;max-width:560px}
+.chip{font-family:var(--f-mono);font-size:12px;padding:3px 10px;border-radius:99px;background:rgba(79,208,138,.16);color:var(--ok);border:1px solid rgba(79,208,138,.4)}
+.chip.off{background:transparent;color:var(--muted);border-color:var(--line)}
+.cap{font-family:var(--f-mono);font-size:12px;color:var(--muted);text-align:center;max-width:520px}
+.cap.tag{color:var(--ember2)}
+
+.bar{width:min(320px,80%);height:10px;border-radius:99px;background:rgba(0,0,0,.45);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ember),var(--ember2))}
+.btn{background:var(--ember);color:#1a0f06;border:0;border-radius:10px;padding:11px 22px;font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:.06em;min-height:46px}
+.btn:hover{background:var(--ember2)}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--panel2)}
+.holdbtn{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:var(--panel2);border:2px solid var(--ember);color:var(--fg);border-radius:99px;padding:12px 30px;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.08em;min-height:52px}
+.holdbtn:active{background:var(--ember);color:#1a0f06}
+.tapobj{background:transparent;border:0;padding:0;width:var(--u);aspect-ratio:1;touch-action:manipulation}
+.tapobj svg,.tapobj img{width:100%;height:100%;filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.tapobj.bump{animation:bump .18s}
+
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px;width:min(620px,100%)}
+.card{background:rgba(24,32,42,.94);border:1.5px solid var(--line);border-radius:12px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
+.card svg,.card img{width:clamp(44px,13vw,70px);height:auto}
+.card b{font-size:13px;font-weight:500;line-height:1.35}
+.card small{font-family:var(--f-mono);font-size:11px;color:var(--muted);line-height:1.3}
+.card:hover{border-color:var(--hue)}
+.card.ok{border-color:var(--ok);background:rgba(79,208,138,.14)}
+.card.bad{border-color:var(--bad);background:rgba(255,93,93,.12);animation:shake .35s}
+.card[disabled]{cursor:default}
+.hdr svg,.hdr img{width:clamp(56px,16vw,92px);height:auto}
+.steps{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:620px}
+.stepchip{display:flex;align-items:center;gap:8px;background:rgba(24,32,42,.94);border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;text-align:left}
+.stepchip svg,.stepchip img{width:34px;height:34px;flex:none}
+.stepchip .no{font-family:var(--f-mono);color:var(--ok);width:1.2em;text-align:center}
+.stepchip.ok{border-color:var(--ok);opacity:.8}
+.stepchip.bad{border-color:var(--bad);animation:shake .35s}
+.dial{width:min(300px,76%);height:auto}
+.rg{width:min(300px,76%);accent-color:var(--ember);height:28px}
+
+/* drag & drop */
+.dz{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:clamp(8px,3vw,30px);width:100%;max-width:560px}
+.dz-src{display:flex;gap:8px;justify-content:center;min-width:0}
+.dgi{width:clamp(52px,15vw,92px);aspect-ratio:1;touch-action:none;cursor:grab;position:relative;z-index:3;transition:transform .28s,opacity .28s;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.dgi.dragging{transition:none;cursor:grabbing;z-index:9}
+.dgi svg,.dgi img{width:100%;height:100%;pointer-events:none;display:block}
+.dz-tgt{position:relative;width:clamp(96px,28vw,170px);aspect-ratio:1;border:2px dashed var(--hue);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,20,26,.55);animation:pulse 1.8s infinite}
+.dz-tgt.over{background:rgba(56,201,220,.2)}
+.tgi{width:76%;transition:transform 1.3s ease-in,filter .4s}
+.tgi svg,.tgi img{width:100%;height:auto;display:block}
+.tgi.hot{filter:drop-shadow(0 0 16px #ff7a1a) brightness(1.2);animation:glow 1s ease-in-out infinite}
+.tgi.busy{filter:drop-shadow(0 0 14px #38c9dc) brightness(1.15);animation:wig .25s infinite alternate}
+.tgi.drive{transform:translateX(160%)}
+.tgl{font-size:11px;color:var(--muted);text-align:center;line-height:1.2;padding:0 4px}
+.dz-arrow{color:var(--hue);font-size:22px}
+
+/* cnc */
+.cnc{position:relative;width:min(100%,430px);aspect-ratio:3/2;border-radius:12px;overflow:hidden;background:rgba(10,15,20,.6);border:1px solid var(--line)}
+.cnc>svg.m{position:absolute;inset:0;width:100%;height:100%}
+.ctg{position:absolute;width:27%;aspect-ratio:1;transform:translate(-50%,-50%);border:2px dashed var(--hue);border-radius:10px;pointer-events:none;animation:pulse 1.6s infinite}
+.ctg.over{background:rgba(56,201,220,.2)}
+.cwp{position:absolute;width:21%;aspect-ratio:1;touch-action:none;cursor:grab;transition:left .35s,top .35s;z-index:4;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+.cwp.dragging{transition:none;cursor:grabbing}
+.cwp svg,.cwp img{width:100%;height:100%;pointer-events:none;display:block}
+.cwp.spin svg{animation:spin .55s linear infinite}
+.cwp.ready{animation:bump .6s infinite alternate;cursor:pointer}
+.cwp .hole{position:absolute;width:14%;height:14%;transform:translate(-50%,-50%);border-radius:50%;background:#121921;box-shadow:0 0 0 2px rgba(255,255,255,.65)}
+.ctool{position:absolute;z-index:5;transition:left .4s ease,top .3s ease;pointer-events:none}
+.ctool svg{width:100%;height:100%;display:block}
+.spark{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--ember2);z-index:6;pointer-events:none;animation:spk .55s ease-out forwards}
+.cncui{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:50px;justify-content:center}
+
+.castsvg,.poursvg{width:min(420px,100%);height:auto;display:block;max-height:100%}
+
+/* compare / report */
+.cmp{position:relative;width:min(100%,290px);aspect-ratio:1;border-radius:12px;overflow:hidden;background:rgba(10,15,20,.6);border:1px solid var(--line)}
+.cmp .cl{position:absolute;inset:0;padding:10%}
+.cmp .cl svg,.cmp .cl img{width:100%;height:100%;display:block}
+.cmp .cdiv{position:absolute;top:0;bottom:0;width:3px;margin-left:-1.5px;background:var(--hue);box-shadow:0 0 8px var(--hue)}
+.ctag{position:absolute;bottom:8px;font-family:var(--f-mono);font-size:11px;background:rgba(15,20,26,.8);padding:2px 8px;border-radius:99px;color:var(--muted)}
+.ctag.l{left:8px}.ctag.r{right:8px}
+.rep{width:min(560px,100%);background:rgba(240,244,248,.96);color:#1b232d;border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.rep h4{margin:0;font-size:13px;line-height:1.3}
+.rep .sample{font-family:var(--f-mono);font-size:10px;color:#b4540f;background:#ffe7d1;border-radius:4px;padding:1px 6px;justify-self:start}
+.rep .tw{overflow-x:auto}
+.rep table{border-collapse:collapse;width:100%;font-size:11.5px}
+.rep th,.rep td{text-align:left;padding:3px 4px;border-bottom:1px solid #d3dbe4;font-variant-numeric:tabular-nums}
+.rep th{font-size:10.5px;color:#5b6a7c;font-weight:500}
+.rep td.ok{color:#128250;font-weight:700}
+.rep .pass{justify-self:end;font-family:var(--f-display);font-weight:700;letter-spacing:.08em;font-size:18px;color:#128250;border:2px solid #128250;border-radius:6px;padding:0 12px;transform:rotate(-4deg)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:10px}
+.phead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sopno{font-family:var(--f-mono);font-size:12px;background:var(--hue);color:#08121a;border-radius:5px;padding:1px 8px;font-weight:500}
+.panel h2{margin:0;font-family:var(--f-display);font-size:24px;letter-spacing:.04em;line-height:1.2;text-wrap:balance}
+.sop{margin:0;color:var(--muted);font-size:13px}
+.task{margin:0;font-size:16px;font-weight:500}
+.why{margin:0;font-size:13px;color:#b9c5d3}
+.why b{font-family:var(--f-mono);font-size:11px;color:var(--hue);font-weight:500;letter-spacing:.06em;margin-right:6px}
+.fb{min-height:44px;padding:9px 12px;border-radius:8px;border-left:3px solid var(--line);background:var(--panel2);color:var(--muted);font-size:14px}
+.fb.ok{border-color:var(--ok);color:var(--fg)}
+.fb.hint{border-color:var(--ember2);color:var(--fg)}
+.panel .row{display:flex;justify-content:flex-end}
+
+.card-big{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;animation:enter .45s ease both}
+.hero{position:relative;height:clamp(190px,36vw,300px)}
+.hero .bg{position:absolute;inset:0;width:100%;height:100%}
+.hero .shade{position:absolute;inset:0;background:linear-gradient(0deg,var(--panel),transparent 70%)}
+.hero .heroprod{position:absolute;right:6%;bottom:8%;width:clamp(90px,22vw,170px);filter:drop-shadow(0 8px 16px rgba(0,0,0,.5))}
+.hero .heroprod svg{width:100%;height:auto;display:block}
+.body{padding:6px 18px 20px;display:grid;gap:12px;justify-items:start}
+.body h1{margin:0;font-family:var(--f-display);font-size:clamp(34px,8vw,56px);letter-spacing:.07em;line-height:1;text-wrap:balance}
+.body h1 em{font-style:normal;color:var(--ember)}
+.body p{margin:0;max-width:62ch;color:#c4cfdb}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tags span{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;color:var(--muted)}
+.stagelist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px;width:100%}
+.stagelist li{display:flex;gap:8px;align-items:center;font-size:13px;color:#c4cfdb}
+.stagelist i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.stagelist.sm{grid-template-columns:1fr}
+.stagelist .sub{display:block;color:var(--muted);font-size:12px}
+.stageno{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;color:var(--hue)}
+.note{font-size:12px;color:var(--muted);text-align:center;margin:2px 0 0}
+.sumcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;width:100%}
+.sumcols h3{margin:0 0 4px;font-family:var(--f-display);font-size:17px;letter-spacing:.05em;color:var(--c)}
+.sumcols ol{margin:0;padding:0;list-style:none;font-size:13px;color:#c4cfdb;display:grid;gap:2px}
+.sumcols li::before{content:"✓ ";color:var(--ok)}
+.sumcols .n{font-family:var(--f-mono);color:var(--muted);font-size:11px;margin-right:4px}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
+.order{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:14px;width:100%;align-items:start;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.order .dwg{width:100%}
+.order .dwg svg{width:100%;height:auto;display:block}
+.order dl{margin:0;display:grid;gap:6px;font-size:13px}
+.order dt{font-family:var(--f-mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+.order dd{margin:0;color:var(--fg)}
+.journey{display:flex;align-items:center;gap:2px;width:100%;padding-bottom:4px}
+.jn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;flex:1}
+.jn svg,.jn img{width:clamp(30px,8vw,60px);height:auto}
+.jn small{font-size:10px;color:var(--muted);text-align:center;line-height:1.2}
+.journey .ar{color:var(--ember);flex:none}
+.stamp{font-family:var(--f-display);font-weight:700;letter-spacing:.14em;color:var(--ok);border:2px solid var(--ok);border-radius:6px;padding:0 12px;font-size:20px}
+
+.zones{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;width:100%}
+@media (max-width:560px){.zones{grid-template-columns:repeat(2,1fr)}}
+.zn{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px;min-width:0;opacity:.5}
+.zn span{font-family:var(--f-mono);font-size:11px}
+.zn.on{opacity:1;color:var(--fg);border-color:var(--c)}
+.zn.on span{color:var(--c)}
+.zn.new{animation:unlock .9s ease both;box-shadow:0 0 0 2px var(--c)}
+.zn:not(.on)::after{content:"LOCKED";font-family:var(--f-mono);font-size:10px;letter-spacing:.1em}
+.achbar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--ember2);border-radius:12px;padding:8px 14px;animation:enter .5s ease both}
+.achbar svg,.ach svg,.finalbadge svg{width:38px;height:38px;flex:none}
+.achbar small,.finalbadge small{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;color:var(--ember2)}
+.achbar b,.finalbadge b{font-size:15px;font-weight:700}
+.setl{width:100%;display:grid;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.setl h3{margin:0;font-family:var(--f-display);font-size:20px;letter-spacing:.05em}
+.setl h4{margin:8px 0 0;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;color:var(--hue);font-weight:500}
+.sethead{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between}
+.sethead .sample{font-family:var(--f-mono);font-size:10px;color:var(--ember2);border:1px solid var(--line);border-radius:6px;padding:1px 8px}
+.grade{display:flex;align-items:baseline;gap:12px}
+.grade b{font-family:var(--f-display);font-size:60px;line-height:1;color:var(--ember)}
+.grade span{font-family:var(--f-mono);color:var(--muted)}
+.met{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:5px 0;font-size:13px}
+.met span{color:var(--muted)}
+.met b{font-weight:500;text-align:right}
+.achgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.ach{display:flex;gap:10px;align-items:center;opacity:.38}
+.ach.on{opacity:1}
+.ach small{display:block;font-size:11px;color:var(--muted);line-height:1.3}
+.finalbadge{display:flex;align-items:center;gap:10px;margin-top:6px;border:1px solid var(--ember2);border-radius:12px;padding:8px 12px;justify-self:start}
+.defect{position:absolute;width:16%;height:3px;margin:-1px 0 0 -8%;background:#3a4757;border-radius:2px;transform:rotate(-28deg);box-shadow:0 0 0 1px rgba(255,255,255,.3)}
+.ring{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:2px solid var(--bad);border-radius:50%}
+@keyframes unlock{0%{transform:scale(.9);opacity:.3}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes blink{50%{opacity:.55}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(56,201,220,.6)}100%{box-shadow:0 0 0 14px rgba(56,201,220,0)}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes fl{from{opacity:1}to{opacity:0}}
+@keyframes wig{from{transform:translate(-1.5px,0) rotate(-.8deg)}to{transform:translate(1.5px,1px) rotate(.8deg)}}
+@keyframes bump{50%{transform:scale(.94)}}
+@keyframes glow{50%{opacity:.75}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spk{from{opacity:1;transform:translate(0,0)}to{opacity:0;transform:translate(var(--dx),var(--dy))}}
+@keyframes popin{0%{transform:scale(.4)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+@keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes sp{0%{opacity:0;transform:translateY(-8px)}10%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+@keyframes ndrop{to{transform:rotate(-125deg)}}
+.glow{animation:glow 1.8s ease-in-out infinite}
+.nd{transform-origin:60px 60px;transform-box:view-box}
+.nd.drop{animation:ndrop 3.2s ease-in forwards}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gAlu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f6fa"/><stop offset="1" stop-color="#a3b1c1"/></linearGradient>
+    <linearGradient id="gRaw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aab6c3"/><stop offset="1" stop-color="#6b7888"/></linearGradient>
+    <linearGradient id="gSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f5f72"/><stop offset="1" stop-color="#2a3644"/></linearGradient>
+    <linearGradient id="gMol" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd36b"/><stop offset="1" stop-color="#ff5a14"/></linearGradient>
+    <linearGradient id="gLamp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="gWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a2330"/><stop offset="1" stop-color="#121922"/></linearGradient>
+    <pattern id="iso" width="80" height="40" patternUnits="userSpaceOnUse"><path d="M0 20L40 0L80 20L40 40Z" fill="none" stroke="#223041" stroke-width="1.5"/></pattern>
+  </defs>
+</svg>
+
+<div class="app" id="app"></div>
+
+<script>
+/* ============================================================
+   素材替換 / Asset overrides  (遊戲邏輯與圖片分離)
+   把實際照片的網址填進來即可,不必改遊戲邏輯。圖片載入失敗時會自動改用內建插畫。
+   Put real photo URLs here; no game logic changes needed.
+   If an image fails to load, the built-in illustration is used instead.
+
+   ASSETS.stages[0..5]  關卡背景照片 / stage background photos
+   ASSETS.icons.<name>  取代同名插畫 / replaces the drawn icon of that name
+
+   同一件產品 (product, one part through all six stages):
+     pIngot 原料 · pRaw 粗鑄件 · pCut 切料頭後 · pRough 清砂心後 · pClean 去毛邊後
+     pSmooth 整理後鑄件 · pTurned 車削後 · pMach CNC 加工件 · pDone 檢驗完成 · pBox 成品包裝
+   設備 (equipment):
+     furnace ladle mold moldSec core oven saw hardness spectro code lathe mill cmm fixture
+     gaugeOk gaugeLeak box label shelf truck bracket clip drawing model3d
+   ============================================================ */
+const ASSETS = { stages:{}, icons:{} };
+
+const AL='url(#gAlu)', ST='url(#gSteel)', MO='url(#gMol)';
+
+/* ---------- 同一件產品:依狀態繪製 ---------- */
+const NZ=[0,2,-1.5,2.5,-1,1.5,-2,2,-1,1,-2.5,2,-1,1.5,-1.5,2,-1,2];
+function roughPath(cx,cy,r){let d='';NZ.forEach((nz,i)=>{const a=i/NZ.length*Math.PI*2;d+=(i?'L':'M')+(cx+(r+nz)*Math.cos(a)).toFixed(1)+' '+(cy+(r+nz)*Math.sin(a)).toFixed(1)});return d+'Z'}
+function PROD(o){
+  let s='<ellipse cx="60" cy="112" rx="40" ry="5" fill="#000" opacity=".25"/>';
+  if(o.risers) s+='<rect x="28" y="8" width="18" height="36" rx="3" fill="url(#gRaw)"/><rect x="74" y="8" width="18" height="36" rx="3" fill="url(#gRaw)"/><rect x="40" y="26" width="40" height="12" fill="url(#gRaw)"/><path d="M28 9h18M74 9h18" stroke="#ffb15c" stroke-width="3" opacity=".7"/>';
+  if(o.rough){
+    s+=`<g transform="translate(0 7)"><path d="${roughPath(60,72,36)}" fill="#4c5766"/></g><path d="${roughPath(60,72,36)}" fill="url(#gRaw)"/>`;
+    s+=[[44,58],[78,62],[52,88],[72,84],[60,52],[86,76]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="1.4" fill="#2f3945" opacity=".45"/>`).join('');
+  } else {
+    s+='<circle cx="60" cy="79" r="36" fill="#6f7d8d"/><circle cx="60" cy="72" r="36" fill="url(#gAlu)"/>';
+  }
+  if(o.turned) s+='<circle cx="60" cy="72" r="30" fill="none" stroke="#fff" stroke-width="1.4" opacity=".5"/><circle cx="60" cy="72" r="24" fill="none" stroke="#fff" stroke-width="1.2" opacity=".3"/><path d="M34 54A30 30 0 0 1 66 42" stroke="#fff" stroke-width="3" opacity=".75" fill="none" stroke-linecap="round"/>';
+  if(o.core) s+='<circle cx="60" cy="72" r="13" fill="#c9a874"/><path d="M52 66l16 12M52 78l16-12" stroke="#a98a58" stroke-width="2"/>';
+  else if(o.turned) s+='<circle cx="60" cy="72" r="17" fill="#eef3f8"/><circle cx="60" cy="72" r="12.5" fill="#121921"/>';
+  else s+='<circle cx="60" cy="72" r="12.5" fill="#121921" stroke="#4c5766" stroke-width="2"/>';
+  if(o.holes) s+=[[79,53],[41,53],[41,91],[79,91]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#121921" stroke="#fff" stroke-opacity=".75" stroke-width="1.6"/>`).join('');
+  if(o.burr) s+='<g fill="#c3ccd6" stroke="#6b7888" stroke-width="1"><path d="M22 66L11 72L22 79Z"/><path d="M98 66L109 72L98 79Z"/><path d="M30 94L22 105L38 102Z"/><path d="M90 94L98 105L82 102Z"/></g>';
+  if(o.badge) s+='<circle cx="96" cy="102" r="15" fill="#4fd08a" stroke="#0f141a" stroke-width="2"/><path d="M88 102l6 6 11-12" stroke="#06210f" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  return s;
+}
+
+const holes=[[60,36],[84,60],[60,84],[36,60]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#1b232d"/>`).join('');
+const pol=(a,r)=>[(60+r*Math.cos(a*Math.PI/180)).toFixed(1),(60-r*Math.sin(a*Math.PI/180)).toFixed(1)];
+const garc=(a1,a2,c)=>{const p=pol(a1,40),q=pol(a2,40);return `<path d="M${p[0]} ${p[1]}A40 40 0 0 1 ${q[0]} ${q[1]}" stroke="${c}" stroke-width="7" fill="none"/>`};
+const gauge=leak=>`<circle cx="60" cy="60" r="48" fill="#e8edf2" stroke="#3a4757" stroke-width="7"/>${garc(200,150,'#ff5d5d')}${garc(80,20,'#4fd08a')}<g class="nd ${leak?'drop':''}"><path d="M60 60L${pol(50,34).join(' ')}" stroke="#1b232d" stroke-width="4" stroke-linecap="round"/></g><circle cx="60" cy="60" r="6" fill="#1b232d"/>`;
+
+const ICON = {
+  ingot:`<path d="M12 90l10-24h76l10 24z" fill="${AL}"/><path d="M26 66l8-16h52l8 16z" fill="#eef3f8"/><path d="M12 90h96v8H12z" fill="#7f8da0"/><path d="M34 50l6-14h40l6 14z" fill="${AL}"/>`,
+  furnace:`<rect x="24" y="12" width="14" height="34" fill="#3a4757"/><rect x="12" y="42" width="96" height="62" rx="8" fill="${ST}"/><rect x="8" y="36" width="104" height="12" rx="4" fill="#3a4757"/><path d="M32 104V78a28 28 0 0 1 56 0v26z" fill="${MO}" class="glow"/><rect x="12" y="104" width="96" height="8" rx="3" fill="#252f3b"/>`,
+  ladle:`<path d="M12 26L70 62" stroke="#8d9bab" stroke-width="7" stroke-linecap="round"/><path d="M64 62h46a23 23 0 0 1-46 0z" fill="#3a4757"/><ellipse cx="87" cy="62" rx="23" ry="6" fill="${MO}" class="glow"/>`,
+  mold:`<rect x="12" y="26" width="96" height="32" rx="4" fill="${ST}"/><rect x="12" y="64" width="96" height="32" rx="4" fill="#2c3846"/><path d="M40 64h40v-6a20 14 0 0 0-40 0z" fill="#0f141a"/><rect x="54" y="14" width="12" height="14" fill="#8d9bab"/>`,
+  moldSec:`<rect x="8" y="12" width="104" height="44" rx="3" fill="${ST}"/><rect x="8" y="64" width="104" height="44" rx="3" fill="#2c3846"/><rect x="34" y="46" width="52" height="28" rx="4" fill="#0f141a"/><path d="M46 12h28l-6 8H52z" fill="#0f141a"/><rect x="52" y="12" width="16" height="34" fill="#0f141a"/><rect x="76" y="26" width="14" height="22" fill="#0f141a"/><path d="M4 60h112" stroke="#ff7a1a" stroke-width="3" stroke-dasharray="7 5"/>`,
+  core:`<rect x="34" y="26" width="52" height="68" rx="10" fill="#c9a874"/><rect x="24" y="44" width="12" height="32" fill="#a98a58"/><rect x="84" y="44" width="12" height="32" fill="#a98a58"/><path d="M46 38v44M60 36v48M74 38v44" stroke="#a98a58" stroke-width="2.5"/>`,
+  saw:`<rect x="16" y="90" width="88" height="14" rx="3" fill="#3a4757"/><path d="M28 90V34a32 32 0 0 1 64 0" fill="none" stroke="#8d9bab" stroke-width="8"/><rect x="22" y="56" width="76" height="4" fill="#ffb15c"/><rect x="40" y="62" width="40" height="22" rx="3" fill="${AL}"/>`,
+  oven:`<rect x="12" y="20" width="96" height="82" rx="6" fill="${ST}"/><rect x="26" y="36" width="68" height="50" rx="3" fill="#1b232d"/><path d="M40 78q6-10 0-20M60 78q6-10 0-20M80 78q6-10 0-20" stroke="#ff7a1a" stroke-width="4" fill="none" stroke-linecap="round" class="glow"/><circle cx="24" cy="28" r="3.5" fill="#ff7a1a"/>`,
+  hardness:`<path d="M30 104V26h50v16H46v62z" fill="${ST}"/><rect x="22" y="100" width="64" height="10" rx="2" fill="#3a4757"/><circle cx="88" cy="34" r="20" fill="#e8edf2"/><path d="M88 34l10-10" stroke="#ff5d5d" stroke-width="3"/><rect x="60" y="76" width="44" height="14" fill="${AL}"/><rect x="78" y="58" width="8" height="18" fill="#7f8da0"/>`,
+  code:`<rect x="10" y="16" width="100" height="66" rx="5" fill="#1b232d" stroke="#3a4757" stroke-width="4"/><path d="M22 32h32M22 43h54M22 54h38M22 65h48" stroke="#4fd08a" stroke-width="3.5" stroke-linecap="round"/><rect x="50" y="86" width="20" height="10" fill="#3a4757"/><rect x="34" y="96" width="52" height="7" rx="2" fill="#3a4757"/>`,
+  lathe:`<rect x="8" y="84" width="104" height="16" rx="3" fill="#3a4757"/><rect x="12" y="38" width="28" height="48" rx="3" fill="${ST}"/><rect x="40" y="52" width="42" height="26" fill="${AL}"/><rect x="88" y="42" width="16" height="42" fill="#2c3846"/><path d="M92 54l-14 20h20z" fill="#ffb15c"/>`,
+  mill:`<rect x="8" y="96" width="104" height="10" rx="3" fill="#3a4757"/><rect x="80" y="12" width="24" height="86" fill="${ST}"/><rect x="38" y="12" width="52" height="16" fill="#3a4757"/><rect x="55" y="28" width="10" height="28" fill="#8d9bab"/><path d="M50 56h20l-5 14h-10z" fill="#ffb15c"/><rect x="22" y="82" width="64" height="14" rx="2" fill="#2c3846"/><rect x="36" y="74" width="40" height="10" fill="${AL}"/>`,
+  cmm:`<rect x="8" y="94" width="104" height="12" fill="#5b6a7c"/><rect x="14" y="26" width="12" height="68" fill="#3a4757"/><rect x="94" y="26" width="12" height="68" fill="#3a4757"/><rect x="14" y="20" width="92" height="14" fill="${ST}"/><rect x="56" y="34" width="8" height="38" fill="#8d9bab"/><circle cx="60" cy="76" r="4.5" fill="#ff5d5d"/><rect x="34" y="82" width="52" height="12" rx="2" fill="${AL}"/>`,
+  fixture:`<rect x="12" y="92" width="96" height="14" rx="3" fill="#3a4757"/><rect x="26" y="52" width="68" height="42" rx="4" fill="${ST}"/><rect x="38" y="24" width="44" height="30" rx="3" fill="#2c3846"/><rect x="54" y="12" width="12" height="16" fill="#8d9bab"/><circle cx="60" cy="73" r="14" fill="#121921" stroke="#8d9bab" stroke-width="3"/><path d="M94 72h14V46" stroke="#38c9dc" stroke-width="4" fill="none"/>`,
+  gaugeOk:gauge(false), gaugeLeak:gauge(true),
+  spectro:`<rect x="12" y="28" width="96" height="68" rx="6" fill="${ST}"/><rect x="22" y="38" width="52" height="32" rx="3" fill="#0f141a"/><path d="M26 62l9-14 9 9 9-16 9 12 8-6" stroke="#38c9dc" stroke-width="3" fill="none"/><circle cx="92" cy="54" r="9" fill="#2c3846" stroke="#8d9bab" stroke-width="3"/><rect x="22" y="78" width="76" height="9" fill="#2c3846"/>`,
+  drawing:`<rect x="6" y="6" width="108" height="108" rx="3" fill="#dfe8f1"/><path d="M6 38h108M6 74h108M38 6v108M74 6v108" stroke="#c4d2e0" stroke-width="1"/><circle cx="60" cy="54" r="30" fill="none" stroke="#1b6fb5" stroke-width="3.2"/><circle cx="60" cy="54" r="9" fill="none" stroke="#1b6fb5" stroke-width="3.2"/><g fill="none" stroke="#1b6fb5" stroke-width="2.6"><circle cx="73.4" cy="40.6" r="3.5"/><circle cx="46.6" cy="40.6" r="3.5"/><circle cx="46.6" cy="67.4" r="3.5"/><circle cx="73.4" cy="67.4" r="3.5"/></g><path d="M60 16v76M22 54h76" stroke="#d94a4a" stroke-width="1.2" stroke-dasharray="5 3"/><path d="M30 100h60M30 95v10M90 95v10" stroke="#d94a4a" stroke-width="2.4"/>`,
+  model3d:`<path d="M60 14l42 22v48L60 106 18 84V36z" fill="#16202b" stroke="#38c9dc" stroke-width="3.5"/><path d="M60 58v48M18 36l42 22 42-22" stroke="#38c9dc" stroke-width="3.5" fill="none"/>`,
+  box:`<path d="M14 44l46-22 46 22v46l-46 22-46-22z" fill="#c8a06a"/><path d="M60 112V66L14 44M60 66l46-22" stroke="#8f6f3f" stroke-width="3" fill="none"/><path d="M38 33l46 22v12L38 45z" fill="#e3c590"/>`,
+  label:`<path d="M16 28h58l32 32-32 32H16z" fill="#e8edf2"/><circle cx="32" cy="60" r="6" fill="#0f141a"/><path d="M48 50h30M48 60h22M48 70h28" stroke="#5b6a7c" stroke-width="3"/>`,
+  shelf:`<path d="M14 14v96M106 14v96M14 50h92M14 84h92" stroke="#5b6a7c" stroke-width="6"/><rect x="22" y="24" width="28" height="24" fill="#c8a06a"/><rect x="58" y="30" width="24" height="18" fill="#c8a06a"/><rect x="26" y="58" width="32" height="24" fill="#c8a06a"/><rect x="66" y="62" width="30" height="20" fill="#c8a06a"/>`,
+  truck:`<rect x="6" y="30" width="72" height="52" rx="3" fill="${AL}"/><path d="M78 46h20l16 18v20H78z" fill="#38c9dc"/><rect x="86" y="52" width="14" height="12" fill="#0f141a" opacity=".6"/><circle cx="28" cy="88" r="10" fill="#1b232d" stroke="#8d9bab" stroke-width="3"/><circle cx="96" cy="88" r="10" fill="#1b232d" stroke="#8d9bab" stroke-width="3"/>`,
+  bracket:`<rect x="18" y="56" width="84" height="32" rx="4" fill="${AL}"/><rect x="38" y="26" width="44" height="34" rx="4" fill="#9fb0c2"/><circle cx="32" cy="72" r="6" fill="#3a4757"/><circle cx="88" cy="72" r="6" fill="#3a4757"/><circle cx="60" cy="43" r="7" fill="#3a4757"/>`,
+  clip:`<rect x="24" y="14" width="72" height="94" rx="5" fill="#e8edf2"/><rect x="44" y="8" width="32" height="16" rx="3" fill="#5b6a7c"/><path d="M36 54l9 9 16-18" stroke="#4fd08a" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M36 82h48M36 94h32" stroke="#93a1b3" stroke-width="3.5"/>`,
+  wrap:`<rect x="14" y="34" width="92" height="66" rx="10" fill="#9fd6e0" opacity=".85"/><circle cx="60" cy="67" r="26" fill="url(#gAlu)"/><circle cx="60" cy="67" r="8" fill="#121921"/><path d="M20 44q40 12 80 0" stroke="#fff" stroke-width="2.5" fill="none" opacity=".7"/>`,
+  gate:`<path d="M18 22h84L74 62v40H46V62z" fill="${ST}"/>`
+};
+ICON.pIngot=ICON.ingot; ICON.pBox=ICON.box;
+ICON.pRaw=PROD({rough:1,risers:1,core:1});
+ICON.pCut=PROD({rough:1,core:1,burr:1});
+ICON.pRough=PROD({rough:1,burr:1});
+ICON.pClean=PROD({rough:1});
+ICON.pSmooth=PROD({});
+ICON.pTurned=PROD({turned:1});
+ICON.pMach=PROD({turned:1,holes:1});
+ICON.pDone=PROD({turned:1,holes:1,badge:1});
+
+const svgOf=n=>`<svg viewBox="0 0 120 120" aria-hidden="true">${ICON[n]||''}</svg>`;
+function ic(n){return ASSETS.icons[n]?`<img src="${ASSETS.icons[n]}" alt="" onerror="hqFb(this,'${n}')">`:svgOf(n)}
+window.hqFb=(el,n)=>{const d=document.createElement('div');d.innerHTML=svgOf(n);el.replaceWith(d.firstChild)};
+
+/* ---------- 工廠背景 (等角地板示意插畫) ---------- */
+function BG(i){
+  const lamps=[130,400,670].map(x=>`<path d="M${x-26} 0h52l56 290H${x-82}z" fill="url(#gLamp)"/><rect x="${x-36}" y="12" width="72" height="9" rx="4" fill="#dfe6ee"/>`).join('');
+  const win=[60,200,340,480,620].map(x=>`<rect x="${x}" y="40" width="96" height="46" rx="3" fill="#24384d" opacity=".7"/>`).join('');
+  const base=`<rect width="800" height="500" fill="url(#gWall)"/>${win}<rect y="318" width="800" height="182" fill="#10161d"/><rect y="318" width="800" height="182" fill="url(#iso)"/><path d="M0 318h800" stroke="#2c394a" stroke-width="3"/>${lamps}`;
+  const X={
+   0:`<rect x="40" y="110" width="110" height="80" fill="#dfe8f1" opacity=".75"/><rect x="170" y="130" width="80" height="60" fill="#dfe8f1" opacity=".6"/><path d="M60 140h70M60 160h50" stroke="#1b6fb5" stroke-width="3"/><rect x="520" y="230" width="230" height="100" rx="4" fill="#1d2937"/><rect x="540" y="170" width="86" height="58" rx="4" fill="#0f141a" stroke="#38c9dc" stroke-width="3"/><rect x="640" y="180" width="76" height="48" rx="4" fill="#0f141a" stroke="#38c9dc" stroke-width="3"/><path d="M552 190h50M552 202h34" stroke="#38c9dc" stroke-width="3"/><rect x="60" y="260" width="140" height="70" rx="3" fill="#1d2937"/><ellipse cx="100" cy="256" rx="26" ry="9" fill="#8d9bab"/><ellipse cx="160" cy="256" rx="20" ry="7" fill="#a3b1c1"/>`,
+   1:`<ellipse cx="190" cy="360" rx="260" ry="150" fill="#ff7a1a" opacity=".15"/><rect x="60" y="150" width="260" height="190" rx="14" fill="#232d3a"/><path d="M90 340V270a100 100 0 0 1 200 0v70z" fill="url(#gMol)" opacity=".85" class="glow"/><rect x="330" y="60" width="26" height="280" fill="#232d3a"/><rect x="0" y="108" width="800" height="12" fill="#2c3846"/><rect x="460" y="108" width="14" height="70" fill="#3a4757"/><path d="M467 178v50" stroke="#5b6a7c" stroke-width="3"/><rect x="450" y="228" width="34" height="22" fill="#8d9bab"/><rect x="560" y="240" width="190" height="90" rx="6" fill="#1d2937"/><rect x="580" y="214" width="150" height="30" rx="4" fill="#2c3846"/>`,
+   2:`<rect x="60" y="210" width="150" height="120" rx="6" fill="#1d2937"/><path d="M80 210V160a56 56 0 0 1 112 0v50" fill="none" stroke="#3a4757" stroke-width="10"/><rect x="290" y="170" width="190" height="160" rx="8" fill="#232d3a"/><rect x="316" y="196" width="138" height="90" rx="4" fill="#0f141a"/><path d="M340 270q8-16 0-30M385 270q8-16 0-30M430 270q8-16 0-30" stroke="#ff7a1a" stroke-width="5" fill="none" class="glow"/><path d="M560 120v210M730 120v210M560 190h170M560 260h170" stroke="#3a4757" stroke-width="8"/><ellipse cx="610" cy="176" rx="26" ry="10" fill="#8d9bab"/><ellipse cx="680" cy="246" rx="26" ry="10" fill="#8d9bab"/>`,
+   3:[40,300,560].map(x=>`<rect x="${x}" y="150" width="200" height="180" rx="8" fill="#1d2937"/><rect x="${x+16}" y="170" width="120" height="86" rx="4" fill="#0f141a" stroke="#7aa7ff" stroke-width="3" opacity=".9"/><rect x="${x+148}" y="170" width="38" height="86" rx="3" fill="#2c3846"/><rect x="${x+16}" y="272" width="168" height="10" fill="#2c3846"/>`).join(''),
+   4:`<rect x="60" y="270" width="680" height="60" fill="#1b2430"/><rect x="90" y="120" width="26" height="150" fill="#2c3846"/><rect x="330" y="120" width="26" height="150" fill="#2c3846"/><rect x="90" y="112" width="266" height="26" fill="#3a4757"/><rect x="214" y="138" width="14" height="80" fill="#8d9bab"/><circle cx="221" cy="224" r="8" fill="#ff5d5d"/><rect x="470" y="170" width="250" height="100" rx="6" fill="#1d2937"/><rect x="490" y="186" width="120" height="68" rx="4" fill="#0f141a" stroke="#4fd08a" stroke-width="3"/><path d="M504 236l22-30 18 20 26-34 30 28" stroke="#4fd08a" stroke-width="3" fill="none"/>`,
+   5:`<path d="M60 90v240M200 90v240M340 90v240M60 160h280M60 230h280M60 300h280" stroke="#3a4757" stroke-width="9"/>${[[80,110],[220,110],[100,180],[240,180],[80,250],[220,250]].map(p=>`<rect x="${p[0]}" y="${p[1]}" width="70" height="46" fill="#c8a06a" opacity=".85"/>`).join('')}<rect x="470" y="100" width="280" height="230" fill="#0c1218" stroke="#3a4757" stroke-width="6"/><rect x="500" y="200" width="200" height="110" rx="4" fill="#cfd8e1" opacity=".85"/><path d="M700 230h40l20 28v52h-60z" fill="#38c9dc" opacity=".8"/>`
+  };
+  return `<svg class="bg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${base}${X[i]}<rect width="800" height="500" fill="var(--hue)" opacity=".05"/></svg>`;
+}
+
+/* ---------- 文字:每段文字同時輸出中英,由 CSS 切換,切換語言不會重置進度 ---------- */
+/* 語言管理 / Language management
+   新增語言:1) 把代碼加進 LANGS 與 LANG_META  2) 在文字物件補上該語言,例如 z('中文','English',{ja:'日本語',de:'Deutsch'})
+   缺少的語言會自動顯示英文。 To add a language: add it to LANGS and LANG_META, then add the key to text objects.
+   Missing keys fall back to English. */
+const LANGS=['zh','en'];
+const LANG_META={zh:'繁中',en:'EN'};
+const z=(zh,en,more)=>Object.assign({zh,en},more||{});
+const LH=o=>typeof o==='string'?o:LANGS.map(l=>`<span data-l="${l}">${o[l]!=null?o[l]:o.en}</span>`).join('');
+const navL=(navigator.language||'en').toLowerCase();
+let lang=LANGS.find(l=>navL.indexOf(l)===0)||'en';
+const L=o=>typeof o==='string'?o:(o[lang]!=null?o[lang]:o.en);
+(()=>{const s=document.createElement('style');s.textContent=LANGS.map(l=>`html[data-lang="${l}"] [data-l="${l}"]{display:inline}`).join('\n');document.head.appendChild(s)})();
+const UI={
+  start:z('開始遊戲','Start'), accept:z('接受訂單','Accept the order'), enter:z('進入產線','Enter the line'),
+  nextPhase:z('下一步','Next'), nextStep:z('前往下一道工序','Next process'), finish:z('完成出貨','Finish shipping'),
+  hold:z('按住操作','Press & hold'), lock:z('鎖定','Lock in'), pour:z('按住澆鑄','Hold to pour'),
+  again:z('重新體驗','Play again'), site:z('前往宏合官網','Visit HONHO website'),
+  stage:z('關卡','STAGE'), act:z('動作','Action'), key:z('製程重點','KEY POINT'),
+  tapx:n=>z(`點擊 ${n} 次`,`Tap ${n} times`),
+  idle:z('依照上方指示操作機台。','Follow the task above to operate the machine.'),
+  miss:z('再找找發亮的標示圈。','Look for the glowing rings.'),
+  tapcallout:z('點選發亮的圈圈','Tap the glowing rings'),
+  dragcap:z('把物件拖曳到虛線框(點一下也可以放入)。','Drag the item into the dashed box (a tap also works).'),
+  dragmiss:z('還沒放到位置,再拖進虛線框內。','Not in place yet. Drag it into the dashed box.'),
+  retry:z('請再試一次。','Please try again.'),
+  wrongOrder:z('順序不對,想想實際作業會先做哪一步。','Wrong order. Think about what happens first on the floor.'),
+  go:z('啟動機台','START'), takeout:z('點擊工件取出','Tap the part to take it out'),
+  statepop:z('產品狀態更新','PRODUCT UPDATED'), complete:z('完成','complete'),
+  sample:z('示意資料','SAMPLE DATA'),
+  findcap:z('點選看到異常的位置;沒有異常就按「判定合格」。','Tap a spot if you see a defect. If the part is clean, press “Pass”.'),
+  passbtn:z('判定合格','Pass'), achUnlocked:z('成就解鎖','ACHIEVEMENT UNLOCKED'), zones:z('工廠區域解鎖','FACTORY AREAS UNLOCKED'), slide:z('左右拖曳滑桿,比較加工前後','Slide to compare before and after'),
+  note:z('畫面為示意插畫與示意產品,宏合實際工廠、機台與產品照片將陸續更新。所有數值皆為遊戲示意,不代表宏合正式製程參數或檢驗紀錄。','Illustrations, the sample part and all values are schematic. Real HONHO plant, machine and product photos will be added. Nothing here is an official HONHO process parameter or inspection record.'),
+  tag:z('OEM 製造 · 鋁合金重力鑄造 · CNC 精密加工','OEM manufacturing · Aluminum gravity casting · CNC precision machining')
+};
+const T=k=>LH(UI[k]);
+
+/* ---------- 同一件產品的六個狀態 ---------- */
+const PSTATES=[
+ {icon:'pIngot',l:z('鋁錠','Ingot')},{icon:'pRaw',l:z('毛胚鑄件','Rough Casting')},{icon:'pSmooth',l:z('清理後鑄件','Cleaned Casting')},
+ {icon:'pMach',l:z('CNC 加工件','CNC Part')},{icon:'pDone',l:z('檢驗合格品','Passed Part')},{icon:'pBox',l:z('包裝完成品','Packed Product')}
+];
+
+const STAGES=[
+ {t:z('設計與模具準備','Design & Tooling Prep'),sub:z('一切從客戶的圖面或樣品開始。宏合不做產品設計,先把要做的東西確認清楚。','Everything starts with the customer’s drawing or sample. HONHO does not design the product, so we confirm exactly what to build.'),c:'#38c9dc'},
+ {t:z('鋁合金熔解與鑄造','Aluminum Melting & Casting'),sub:z('把鋁料熔成鋁液,做好砂心,倒進模具成形。','Melt the aluminum, make the sand core, and pour it into the mold.'),c:'#ff7a1a'},
+ {t:z('鑄件整理與處理','Casting Finishing'),sub:z('剛鑄出來的鑄件還要切除料頭、熱處理,再把外觀整理好。','A fresh casting still needs its runners cut, heat treatment and a clean surface.'),c:'#ffb15c'},
+ {t:z('CNC 精密加工','CNC Precision Machining'),sub:z('用 CNC 車床及 CNC 銑床,把鑄件加工到圖面要求。','CNC lathes and CNC milling machines bring the casting to drawing requirements.'),c:'#7aa7ff'},
+ {t:z('品質檢驗','Quality Inspection'),sub:z('氣密試漏與三次元全尺寸量測,確認每一件都符合要求。','Leak testing and full-dimension CMM measurement confirm every part meets requirements.'),c:'#4fd08a'},
+ {t:z('組裝、包裝與出貨','Assembly, Packing & Shipping'),sub:z('依產品要求組裝送樣,包裝入庫,最後出貨到客戶手上。','Assemble and send samples as required, pack, store, then ship to the customer.'),c:'#c58bff'}
+];
+
+/* ---------- 19 項 SOP,順序依原始流程;互動類型: spot tap pick order hold slider pour drag cast cnc compare report ---------- */
+const STEPS=[
+ {st:0,t:z('藍圖樣品確認、建模','Drawing & Sample Check, Modeling'),sop:z('核對客戶圖面或樣品,建立 3D 模型。','Check the customer drawing or sample and build a 3D model.'),
+  why:z('宏合依客戶圖面或樣品生產。先核對清楚,後續每個製程才有依據。','HONHO produces to the customer’s drawing or sample. Checking first gives every later step a reference.'),ph:[
+  {k:'spot',icon:'drawing',q:z('點選圖面上的 3 個標註,逐項與樣品核對。','Tap the 3 callouts on the drawing and check each against the sample.'),
+   pts:[{x:50,y:83,l:z('外徑尺寸','Outer diameter'),info:z('外徑尺寸:圖面標註的外徑,後續加工與量測都以它為準。','Outer diameter: the drawing sets this size. Machining and inspection both refer to it.')},
+        {x:50,y:45,l:z('中心孔','Center bore'),info:z('中心孔:孔徑與位置依圖面要求,加工後會再量測確認。','Center bore: size and position follow the drawing and are measured again after machining.')},
+        {x:61,y:34,l:z('孔位','Bolt hole'),info:z('孔位:孔的位置與數量依圖面標註。','Bolt holes: position and quantity follow the drawing callouts.')}],
+   done:z('圖面與樣品核對完成。圖面由客戶提供,宏合依圖面及要求生產。','Drawing and sample checked. The drawing comes from the customer; HONHO produces to it.')},
+  {k:'tap',icon:'model3d',n:3,q:z('點擊模型,建立加工用 3D 模型。','Tap the model to build the 3D model for production.'),
+   done:z('3D 模型建立完成,依客戶圖面建立,不變更客戶設計。','3D model built from the customer’s drawing, with no change to the design.')}]},
+ {st:0,t:z('模具確認','Mold Confirmation'),sop:z('初步確認模具設計。','Initial confirmation of the mold design.'),
+  why:z('模具是鋁合金重力鑄造的重要工具,上機前先確認設計。','The mold is the key tool for aluminum gravity casting. Its design is confirmed before it goes on the machine.'),ph:[
+  {k:'spot',icon:'moldSec',q:z('點選模具剖面圖上的澆口、冒口與分模面。','Tap the gate, riser and parting line on the mold cross-section.'),
+   pts:[{x:50,y:18,l:z('澆口','Gate'),info:z('澆口:鋁液由這裡流進模穴。','Gate: molten aluminum flows into the cavity here.')},
+        {x:69,y:28,l:z('冒口','Riser'),info:z('冒口:補償凝固時的收縮,鑄造後會在料頭切鋸時切除。','Riser: feeds shrinkage while the metal solidifies. It is cut off later at runner cutting.')},
+        {x:12,y:50,l:z('分模面','Parting line'),info:z('分模面:上下模接合的面,開模時由這裡分開。','Parting line: where the mold halves meet and separate when the mold opens.')}],
+   done:z('模具確認完成。先確認模具設計,才不會白做。','Mold confirmed. Checking the design first avoids rework.')}]},
+ {st:0,t:z('採購鋁料','Aluminum Procurement'),sop:z('鋁料入庫前使用分光儀檢測材質。','Check material with a spectrometer before the aluminum goes into stock.'),
+  why:z('鋁料入庫前先以分光儀確認材質,不合格的料不入庫。','Material is checked on a spectrometer before it goes into stock. Off-spec material is not accepted.'),ph:[
+  {k:'drag',items:[{icon:'ingot'}],target:{icon:'spectro',l:z('分光儀','Spectrometer')},q:z('把鋁料試片放入分光儀。','Place a sample from the lot into the spectrometer.'),
+   fx:{cap:z('分析中…','Analyzing…'),ms:1400,cls:'busy'},done:z('分析完成,三批鋁料的示意結果如下。','Analysis done. Illustrative results for three lots follow.')},
+  {k:'pick',anom:'lot',q:z('哪一批鋁料的材質不能入庫?(數值為示意)','Which lot must not go into stock? (sample values)'),
+   opts:[{icon:'ingot',l:z('批號 A','Lot A'),s:z('Si ✓  Mg ✓  Fe ✓','Si ✓  Mg ✓  Fe ✓'),hint:z('這批各項元素都在範圍內。','All elements on this lot are within range.')},
+         {icon:'ingot',l:z('批號 B','Lot B'),s:z('Si ✓  Mg ✓  Fe ▲偏高','Si ✓  Mg ✓  Fe ▲ high'),ok:1},
+         {icon:'ingot',l:z('批號 C','Lot C'),s:z('Si ✓  Mg ✓  Fe ✓','Si ✓  Mg ✓  Fe ✓'),hint:z('這批各項元素都在範圍內。','All elements on this lot are within range.')}],
+   done:z('材質不符的鋁料,入庫前就攔下來,不使用。','Off-spec material is stopped before it enters stock and is not used.')}]},
+
+ {st:1,t:z('鋁料熔解','Aluminum Melting'),sop:z('鋁合金放入熔爐,進行熔解及保溫。','Aluminum goes into the furnace to be melted and held at temperature.'),
+  why:z('鋁料要先熔成鋁液才能澆鑄,熔解後再保溫,讓鋁液維持在適合澆鑄的狀態。','Aluminum must be melted before pouring. It is then held at temperature, ready to pour.'),ph:[
+  {k:'order',q:z('生產線啟動:依序點選確認材料、模具、設備,最後啟動生產。','Line start-up: tap in order to confirm material, mold and equipment, then start production.'),
+   items:[{icon:'ingot',l:z('確認材料','Confirm material')},{icon:'mold',l:z('確認模具','Confirm mold')},{icon:'furnace',l:z('確認設備','Confirm equipment')},{icon:'code',l:z('啟動生產','Start production')}],
+   hint:z('要先確認材料、模具、設備都沒問題,最後才能啟動生產。','Confirm material, mold and equipment first. Production starts last.'),done:z('生產線準備完成,開始熔解鋁料。','The line is ready. Time to melt the aluminum.')},
+  {k:'drag',items:[{icon:'ingot'},{icon:'ingot'}],target:{icon:'furnace',l:z('熔爐','Furnace')},q:z('把鋁錠拖進熔爐。','Drag the ingots into the furnace.'),
+   fx:{cap:z('熔解中…','Melting…'),ms:1800,cls:'hot'},done:z('鋁錠熔解成鋁液。','The ingots melt into liquid aluminum.')},
+  {k:'slider',q:z('拖曳控制桿,讓鋁液停在適合澆鑄的保溫區間(綠色)。','Drag the control so the melt holds in the pouring range (green).'),band:[44,66],
+   low:z('溫度偏低,鋁液流動性不足,澆鑄時可能填不滿模穴。','Too cold. The melt flows poorly and may not fill the mold.'),
+   high:z('溫度偏高,鋁液容易吸氣、氧化,也浪費能源。','Too hot. The melt picks up gas and oxide, and wastes energy.'),
+   done:z('保溫完成。(刻度為遊戲示意值,不是宏合正式製程參數)','Holding temperature set. (Scale is a game illustration, not a HONHO process parameter.)')}]},
+ {st:1,t:z('模具整修','Mold Preparation'),sop:z('模具上機前進行初步整理。','Prepare the mold before it goes on the machine.'),
+  why:z('模具上機前先整理並確認狀態,避免把問題帶進鑄造。','The mold is prepared and checked before mounting so problems are not carried into casting.'),ph:[
+  {k:'order',q:z('依序點選:模具上機前該怎麼做?','Tap in order: what happens before the mold goes on the machine?'),
+   items:[{icon:'mold',l:z('清除模具殘渣','Clear residue')},{icon:'hardness',l:z('檢查模穴表面','Inspect cavity surface')},{icon:'parting',l:z('模具上機','Mount on machine')}],
+   hint:z('先整理乾淨、檢查沒問題,才能上機。','Clean it, check it, then mount it.'),done:z('模具整理完成,已上機。','Mold prepared and mounted.')}]},
+ {st:1,t:z('砂心製作','Sand Core Making'),sop:z('樹脂砂心炊製成形,並進行烘烤。','Resin sand cores are formed, then baked.'),
+  why:z('砂心可以形成鑄件內部需要的空間或形狀。','The sand core forms the inner space or shape of the casting.'),ph:[
+  {k:'hold',fx:'rise',icon:'core',secs:2,q:z('按住按鈕,炊製樹脂砂心成形。','Press and hold to form the resin sand core.'),done:z('砂心成形。','Core formed.')},
+  {k:'hold',fx:'glow',icon:'oven',secs:2,q:z('按住按鈕,烘烤砂心。','Press and hold to bake the core.'),done:z('砂心烘烤完成,可以放進模具。','Core baked and ready for the mold.')}]},
+ {st:1,t:z('澆鑄成型','Pouring'),sop:z('將鋁液倒入模具。','Pour the molten aluminum into the mold.'),
+  why:z('鋁液靠重力流入模具,澆鑄量要適當。澆完後冷卻、開模、取出粗鑄件。','Metal flows into the mold by gravity and the pour amount must be right. Then it cools, the mold opens and the raw casting comes out.'),ph:[
+  {k:'drag',items:[{icon:'ladle'}],target:{icon:'mold',l:z('模具澆口','Mold gate')},q:z('拖曳澆包到模具澆口。','Drag the ladle to the mold gate.'),done:z('澆包就位,準備澆注。','Ladle in position, ready to pour.')},
+  {k:'pour',tag:'pour',q:z('按住澆鑄,鋁液到綠色範圍時放開。','Hold to pour. Release when the metal reaches the green band.'),band:[56,82],
+   low:z('澆得太少,模穴沒有填滿。','Too little. The cavity is not filled.'),high:z('澆過頭了,鋁液溢出。','Too much. The metal overflowed.'),
+   done:z('澆鑄量適當。接著看鋁液凝固、開模。','Pour amount is right. Next the metal solidifies and the mold opens.')},
+  {k:'cast',prod:1,done:z('取出粗鑄件。產品從鋁錠變成鑄件了。','Raw casting removed. The ingot has become a casting.')}]},
+ {st:1,t:z('材質檢測','Material Check'),sop:z('不定時取鋁水樣品至分光儀檢測材質。','Take molten aluminum samples from time to time and test them on the spectrometer.'),
+  why:z('生產中也會不定時抽檢材質。發現異常要暫停並依程序處理,不能忽略。','Samples are checked from time to time during production. Problems stop the work and are handled per procedure, never ignored.'),ph:[
+  {k:'tap',icon:'ladle',n:1,q:z('點擊勺子,從爐中取鋁水樣品。','Tap the ladle to take a sample from the melt.'),done:z('取樣完成。','Sample taken.')},
+  {k:'drag',items:[{icon:'ladle'}],target:{icon:'spectro',l:z('分光儀','Spectrometer')},q:z('把樣品送進分光儀檢測。','Send the sample into the spectrometer.'),
+   fx:{cap:z('分析中…','Analyzing…'),ms:1200,cls:'busy'},done:z('檢測完成:示意結果有一項元素超出範圍。','Test done: the sample result shows one element out of range.')},
+  {k:'pick',anom:'spectro',q:z('結果有一項超出範圍,該怎麼辦?','One element is out of range. What now?'),
+   opts:[{icon:'mold',l:z('繼續澆鑄','Keep pouring'),hint:z('成分不合格還繼續生產,後面的鑄件都有風險。','Keep going and every following casting is at risk.')},
+         {icon:'clip',l:z('暫停,依程序處理並重新確認','Stop, handle per procedure, re-check'),ok:1},
+         {icon:'ladle',l:z('先不管,下次再測','Ignore it until next time'),hint:z('檢測結果不能放著不處理。','A failed result cannot be left unhandled.')}],
+   done:z('異常立刻暫停處理,確認沒問題才繼續。','Stop at once, handle it, and continue only after it is confirmed.')}]},
+
+ {st:2,t:z('料頭切鋸','Runner & Riser Cutting'),sop:z('切除澆鑄冒口及去除砂心。','Cut off the risers and remove the sand core.'),
+  why:z('先切除冒口與澆道,再把內部砂心清除,鑄件才能繼續整理。','Risers and runner are cut off first, then the sand core is cleared so finishing can continue.'),ph:[
+  {k:'spot',icon:'pRaw',after:'pCut',q:z('點選 3 個要切除的位置(冒口與澆道)。','Tap the 3 places to cut: risers and runner.'),
+   pts:[{x:31,y:21,l:z('冒口','Riser')},{x:69,y:21,l:z('冒口','Riser')},{x:50,y:26,l:z('澆道','Runner')}],
+   done:z('料頭已切除。','Risers and runner removed.')},
+  {k:'tap',icon:'pCut',after:'pRough',n:3,q:z('點擊鑄件,敲除內部砂心。','Tap the casting to knock out the sand core.'),done:z('砂心已清除,中心孔露出來了。','Sand core removed. The bore is open.')}]},
+ {st:2,t:z('熱處理','Heat Treatment'),sop:z('提高硬度及耐磨性,並執行硬度檢測。','Raise hardness and wear resistance, then check hardness.'),
+  why:z('熱處理用來提高硬度及耐磨性,之後依產品要求做硬度檢測。','Heat treatment raises hardness and wear resistance. Hardness is then checked as the product requires.'),ph:[
+  {k:'drag',items:[{icon:'pRough'}],target:{icon:'oven',l:z('熱處理爐','Heat-treat oven')},q:z('把鑄件拖進熱處理爐。','Drag the casting into the heat-treatment oven.'),
+   fx:{cap:z('熱處理中…','Heat treating…'),ms:1800,cls:'hot'},done:z('熱處理完成,鑄件已取出。','Heat treatment finished and the casting is out.')},
+  {k:'drag',items:[{icon:'pRough'}],target:{icon:'hardness',l:z('硬度計','Hardness tester')},q:z('把鑄件放到硬度計的檢測位置。','Place the casting on the hardness tester.'),
+   fx:{cap:z('硬度檢測中…','Testing hardness…'),ms:1300,cls:'busy'},done:z('硬度檢測完成(示意結果:合格)。實際硬度標準依產品要求。','Hardness test done (sample result: pass). Real limits follow the product requirements.')}]},
+ {st:2,t:z('後處理','Post-processing'),sop:z('去除鑄件毛邊。','Remove burrs from the casting.'),
+  why:z('把毛邊去掉,鑄件才適合進入 CNC 加工。','Burrs are removed so the casting is ready for CNC machining.'),ph:[
+  {k:'spot',icon:'pRough',after:'pClean',q:z('點選 4 處毛邊,逐一去除。','Tap the 4 burrs to remove them.'),
+   pts:[{x:20,y:60,l:z('毛邊 1','Burr 1')},{x:80,y:60,l:z('毛邊 2','Burr 2')},{x:29,y:81,l:z('毛邊 3','Burr 3')},{x:71,y:81,l:z('毛邊 4','Burr 4')}],
+   done:z('毛邊已去除。','Burrs removed.')}]},
+ {st:2,t:z('表面處理','Surface Finishing'),sop:z('增加鑄件外觀美觀度。','Improve the appearance of the casting.'),
+  why:z('讓鑄件外觀更好看。鑄件整理到這裡完成。','Improves the look of the casting. Casting finishing ends here.'),ph:[
+  {k:'hold',fx:'wipe',from:'pClean',to:'pSmooth',prod:2,secs:2.5,q:z('按住按鈕,處理鑄件表面。','Press and hold to finish the surface.'),done:z('表面處理完成,整理後鑄件完成。','Surface finished. The casting is now cleaned and ready for CNC.')}]},
+
+ {st:3,t:z('CNC 編程','CNC Programming'),sop:z('編寫 CNC 加工程式。','Write the CNC machining program.'),
+  why:z('依客戶圖面準備加工程式。宏合不負責產品設計,只依圖面加工。','The program is prepared from the customer’s drawing. HONHO does not design the product; it machines to the drawing.'),ph:[
+  {k:'order',q:z('依序點選:編寫 CNC 程式的流程。','Tap in order: how a CNC program gets made.'),
+   items:[{icon:'drawing',l:z('讀取客戶圖面','Read the customer drawing')},{icon:'model3d',l:z('規劃刀具路徑','Plan the toolpath')},{icon:'code',l:z('編寫加工程式','Write the program')},{icon:'gaugeOk',l:z('模擬確認','Simulate and verify')}],
+   hint:z('先讀懂圖面,再規劃路徑、寫程式,最後模擬確認。','Read the drawing, plan the path, write the program, then simulate.'),done:z('加工程式準備完成。','Program ready.')}]},
+ {st:3,t:z('精密切削加工','Precision Machining'),sop:z('使用 CNC 加工機進行精密加工,包含 CNC 車床及 CNC 銑床。','Machine with CNC equipment, including CNC lathes and CNC milling machines.'),
+  why:z('CNC 車床適合旋轉對稱的外徑與端面;CNC 銑床適合平面與孔位等特徵。','A CNC lathe suits rotationally symmetric diameters and faces. A CNC mill suits flat faces, holes and similar features.'),ph:[
+  {k:'pick',hdr:'pSmooth',q:z('這件產品的外徑與端面要車削加工,選哪一台?','This part’s outer diameter and end face need turning. Which machine?'),
+   opts:[{icon:'lathe',l:z('CNC 車床','CNC lathe'),ok:1},{icon:'mill',l:z('CNC 銑床','CNC mill'),hint:z('外徑與端面是旋轉對稱的特徵,車床更直接。','Diameters and faces are rotationally symmetric features, so a lathe suits them better.')}],
+   done:z('外徑與端面,適合用 CNC 車床。','Diameters and end faces suit a CNC lathe.')},
+  {k:'cnc',type:'lathe',from:'pSmooth',to:'pTurned',q:z('把工件拖到夾持位置,啟動 CNC 車床。','Drag the part into the chuck and start the CNC lathe.'),
+   done:z('車削完成:外徑、端面與中心孔已加工。','Turning done: outer diameter, end face and bore are machined.')},
+  {k:'pick',hdr:'pTurned',q:z('接著要加工平面與孔位,選哪一台?','Next come the flat face and holes. Which machine?'),
+   opts:[{icon:'lathe',l:z('CNC 車床','CNC lathe'),hint:z('平面與多個孔位通常用銑床加工。','Flat faces and several holes are usually milling work.')},{icon:'mill',l:z('CNC 銑床','CNC mill'),ok:1}],
+   done:z('平面與孔位,適合用 CNC 銑床。','Flat faces and holes suit a CNC mill.')},
+  {k:'cnc',type:'mill',from:'pTurned',to:'pMach',prod:3,q:z('把工件放到工作台,啟動 CNC 銑床。','Place the part on the table and start the CNC mill.'),
+   done:z('銑削完成,孔位已加工。產品成為 CNC 加工件。','Milling done and the holes are machined. The part is now a CNC part.')},
+  {k:'pick',cond:'oot',anom:'oot',hdr:'cmm',q:z('加工後首件量測:一個孔徑超出圖面公差(示意:Ø9.12,公差 ±0.05)。怎麼辦?','First-piece check: one hole is out of drawing tolerance (sample: Ø9.12, tol. ±0.05). What now?'),
+   opts:[{icon:'mill',l:z('繼續加工後面的產品','Keep machining the rest'),hint:z('尺寸超差還繼續加工,後面都會是不良品。','Keep going out of tolerance and every following part is bad.')},
+         {icon:'clip',l:z('暫停機台,確認加工狀況並調整後再試切','Stop the machine, check the setup, adjust and re-cut'),ok:1},
+         {icon:'code',l:z('把量測值改成合格','Edit the reading to pass'),hint:z('量測數值不能修改,要找出原因。','Readings are never edited. Find the cause.')}],
+   done:z('已暫停並確認加工狀況,調整後重新試切,量測合格才繼續。','Stopped, checked, adjusted and re-cut. Machining continues only after a good measurement.')},
+  {k:'compare',q:z('左右拖曳,比較鑄造後與 CNC 加工後的差異。','Slide to compare the part before and after CNC.'),
+   done:z('比較完成:外型更完整,孔位與加工面都出現了。','Compared: a more finished shape, with holes and machined faces.')}]},
+
+ {st:4,t:z('製程檢測','In-process Testing'),sop:z('執行氣密試漏。','Run the leak (air tightness) test.'),
+  why:z('氣密試漏可以找出肉眼看不到的洩漏。異常品要隔離,不能流到下一站。','Leak testing finds leaks you cannot see. Faulty parts are isolated and never passed on.'),ph:[
+  {k:'drag',items:[{icon:'pMach'}],target:{icon:'fixture',l:z('氣密治具','Leak-test fixture')},q:z('把產品放進氣密治具。','Place the part in the leak-test fixture.'),done:z('產品已放入治具。','Part is in the fixture.')},
+  {k:'tap',icon:'fixture',n:2,q:z('點擊治具兩次:夾持,然後加壓測試。','Tap the fixture twice: clamp, then pressurize.'),done:z('測試完成,三件產品的壓力表讀數出來了。','Test done. Gauge readings for three parts are in.')},
+  {gen:()=>{const n=S.rand.leak;
+   const opts=[0,1,2].map(i=>i===n?{icon:'gaugeLeak',l:z(`產品 ${i+1}`,`Part ${i+1}`),s:z('壓力持續下降','pressure keeps dropping'),ok:1}:{icon:'gaugeOk',l:z(`產品 ${i+1}`,`Part ${i+1}`),s:z('壓力保持','pressure holds'),hint:z('壓力沒有下降,這件沒問題。','Pressure holds. This one is fine.')});
+   return {k:'pick',anom:'leak',q:z('看壓力表,哪一件有洩漏?','Watch the gauges. Which part leaks?'),opts,done:z(`產品 ${n+1} 洩漏,壓力持續下降。`,`Part ${n+1} leaks: its pressure keeps dropping.`)}}},
+  {gen:()=>{const n=S.rand.leak+1;
+   return {k:'pick',anom:'leakIso',q:z(`產品 ${n} 測試洩漏,該怎麼處理?`,`Part ${n} leaks. What should happen to it?`),
+   opts:[{icon:'box',l:z('一起出貨','Ship it anyway'),hint:z('洩漏的產品不能出貨。','A leaking part cannot be shipped.')},
+         {icon:'clip',l:z('隔離並標示,通知相關人員依程序處理','Isolate and tag it, notify the people concerned, handle per procedure'),ok:1},
+         {icon:'gaugeOk',l:z('不記錄,直接重測到過為止','Retest until it passes, no record'),hint:z('異常要隔離並依程序處理,不能只靠重測。','Faults are isolated and handled per procedure, not just retested.')}],
+   done:z('異常品已隔離並通知相關人員,合格的產品進入下一站。','The faulty part is isolated and the people concerned are told. Good parts move on.')}}}]},
+ {st:4,t:z('三次元精測','CMM Measurement'),sop:z('全尺寸量測,並製作樣品檢驗報告。','Measure all dimensions and prepare the sample inspection report.'),
+  why:z('用三次元量測機確認尺寸符合圖面,並製作樣品檢驗報告。','A CMM confirms dimensions against the drawing, and a sample inspection report is prepared.'),ph:[
+  {k:'drag',items:[{icon:'pMach'}],target:{icon:'cmm',l:z('三次元量測機','CMM')},q:z('把產品放到量測平台。','Place the part on the CMM table.'),done:z('產品已放到量測平台。','Part is on the CMM table.')},
+  {k:'spot',icon:'pMach',q:z('用探針量測 4 個孔位(讀數為示意)。','Probe the 4 holes (readings are sample values).'),
+   pts:[{x:34,y:44,l:z('孔位 1 · Ø9.02','Hole 1 · Ø9.02')},{x:66,y:44,l:z('孔位 2 · Ø9.01','Hole 2 · Ø9.01')},{x:34,y:76,l:z('孔位 3 · Ø8.99','Hole 3 · Ø8.99')},{x:66,y:76,l:z('孔位 4 · Ø9.03','Hole 4 · Ø9.03')}],
+   done:z('全尺寸量測完成。','All dimensions measured.')},
+  {gen:()=>({k:'find',anom:'defect',icon:'pMach',on:S.rand.defectOn,pos:S.rand.defect,
+   q:z('外觀檢查:仔細看這件產品。有異常就點選位置,沒有異常就判定合格。','Visual check: look closely. Tap the spot if you see a defect, or pass the part if it is clean.'),
+   doneBad:z('找到了,表面有刮傷。異常品要隔離,不能出貨。','Found it: a surface scratch. The part is isolated and not shipped.'),
+   doneOk:z('外觀沒有異常,判定合格。','No visual defect. The part passes.'),
+   missBad:z('這裡看起來正常,再仔細看看表面。','This spot looks fine. Look more closely at the surface.'),
+   missOk:z('這件的表面沒有異常,可以判定合格。','This part has no defect. It can be passed.'),
+   passBad:z('表面其實有瑕疵,有異常的產品不能判定合格。','There is a surface defect. A faulty part cannot be passed.')})},
+  {k:'report',prod:4,q:z('點擊報告,產生樣品檢驗報告。','Tap the clipboard to create the sample inspection report.'),
+   rows:[{i:z('外徑','Outer Ø'),nom:'Ø60.00',tol:'±0.05',v:'60.02'},{i:z('中心孔徑','Center bore Ø'),nom:'Ø24.00',tol:'±0.03',v:'24.01'},
+         {i:z('孔位 1 孔徑','Hole 1 Ø'),nom:'Ø9.00',tol:'±0.05',v:'9.02'},{i:z('孔位 2 孔徑','Hole 2 Ø'),nom:'Ø9.00',tol:'±0.05',v:'9.01'},
+         {i:z('孔位 3 孔徑','Hole 3 Ø'),nom:'Ø9.00',tol:'±0.05',v:'8.99'},{i:z('孔位 4 孔徑','Hole 4 Ø'),nom:'Ø9.00',tol:'±0.05',v:'9.03'}],
+   done:z('檢驗完成,產品貼上合格標示。','Inspection complete. The part is marked as passed.')}]},
+
+ {st:5,t:z('組裝及送樣','Assembly & Samples'),sop:z('依產品要求進行組裝及送樣。','Assemble as the product requires and send samples.'),
+  why:z('依客戶的產品要求組裝並送樣。這裡以有組裝需求的產品為例;沒有組裝需求就不需要這一步。','Assembly and samples follow the customer’s product requirements. This is an example with assembly; parts without assembly skip it.'),ph:[
+  {k:'order',q:z('依序點選:組裝及送樣。','Tap in order: assembly and sample sending.'),
+   items:[{icon:'clip',l:z('確認組裝要求','Confirm assembly requirements')},{icon:'bracket',l:z('依要求組裝零件','Assemble the parts')},{icon:'truck',l:z('送樣給客戶確認','Send sample to customer')}],
+   hint:z('先確認要求,再組裝,最後送樣。','Confirm requirements, assemble, then send the sample.'),done:z('組裝與送樣完成。','Assembly done and sample sent.')}]},
+ {st:5,t:z('包裝入庫','Packing & Storage'),sop:z('產品包裝並完成入庫。','Pack the products and put them into storage.'),
+  why:z('先保護產品,再裝箱、貼標籤,最後入庫。','Protect the part, box it, label it, then store it.'),ph:[
+  {k:'order',q:z('依序點選:包裝。','Tap in order: packing.'),
+   items:[{icon:'wrap',l:z('放入保護包材','Wrap and protect')},{icon:'box',l:z('裝箱封箱','Box and seal')},{icon:'label',l:z('貼上產品標籤','Apply product label')}],
+   hint:z('先保護產品,再裝箱封箱,最後貼標籤。','Protect the part, box and seal it, then label it.'),done:z('包裝完成。','Packing done.')},
+  {k:'drag',items:[{icon:'pBox'}],target:{icon:'shelf',l:z('倉庫','Warehouse')},prod:5,q:z('把紙箱拖到倉庫位置。','Drag the box to the warehouse.'),done:z('入庫完成。產品成為包裝完成的成品。','Stored. The part is now a packed finished product.')}]},
+ {st:5,t:z('出貨','Shipping'),sop:z('完成產品出貨。','Ship the products.'),
+  why:z('出貨前核對標籤與資料,有誤先修正,不能帶著錯誤出貨。','Labels and data are checked before shipping. Errors are corrected first, never shipped.'),ph:[
+  {gen:()=>S.rand.ship===0
+   ?{k:'pick',anom:'ship',hdr:'label',q:z('裝車前核對:標籤料號與訂單不符,怎麼辦?(示意)','Pre-shipment check: the label part number does not match the order. What now? (example)'),
+    opts:[{icon:'truck',l:z('先出貨,之後再通知','Ship now, tell them later'),hint:z('標籤資料有誤,要先修正才能出貨。','The label is wrong. Correct it before shipping.')},
+          {icon:'label',l:z('修正標籤並重新核對','Correct the label and re-check'),ok:1},
+          {icon:'box',l:z('撕掉標籤直接出貨','Peel the label off and ship'),hint:z('不能沒有標示就出貨。','A part cannot ship unlabeled.')}],
+    done:z('標籤已修正並核對無誤。','Label corrected and verified.')}
+   :{k:'pick',anom:'ship',hdr:'box',q:z('裝車前核對數量:訂單 100 件(模擬),清點只有 98 件。怎麼辦?','Pre-shipment count: the order is 100 pcs (simulated) but only 98 are counted. What now?'),
+    opts:[{icon:'truck',l:z('先出貨,缺的之後補','Ship now, send the rest later'),hint:z('數量不符要先確認,不能直接出貨。','A count mismatch must be resolved before shipping.')},
+          {icon:'clip',l:z('停止出貨,確認原因並補足後重新清點','Hold shipment, find the cause, complete and recount'),ok:1},
+          {icon:'label',l:z('把單據改成 98 件','Change the paperwork to 98'),hint:z('不能用改單據來掩蓋數量不符。','Paperwork is not changed to hide a mismatch.')}],
+    done:z('已確認原因、補足數量並重新清點無誤。','Cause confirmed, quantity completed and recounted.')}},
+  {k:'drag',items:[{icon:'pBox'},{icon:'pBox'},{icon:'pBox'}],target:{icon:'truck',l:z('貨車','Truck')},q:z('把紙箱拖上貨車。','Drag the boxes onto the truck.'),
+   fx:{cap:z('貨車出發…','Truck departing…'),ms:1500,cls:'drive'},done:z('貨已裝車,準時出發,交付客戶。','Loaded and on its way to the customer.')}]}
+];
+
+/* ---------- 工具 ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const rnd=n=>Math.floor(Math.random()*n);
+/* 每次遊玩隨機決定的情境 (window.__rand 只給測試用) */
+function fresh(){return {screen:'start',si:0,pi:0,prod:0,miss:0,stageMiss:[0,0,0,0,0,0],anom:{},pourMiss:null,ach:[],newAch:[],
+  rand:Object.assign({oot:Math.random()<.5,leak:rnd(3),defectOn:Math.random()<.6,defect:rnd(3),ship:rnd(2)},window.__rand||{})}}
+let S=fresh();
+/* 目前實際要玩的互動:略過未觸發的隨機情境,並展開 gen 產生的內容 */
+const PHS=i=>STEPS[i].ph.filter(p=>!p.cond||S.rand[p.cond]).map(p=>p.gen?p.gen():p);
+let cleanups=[];
+const app=$('#app');
+function setHue(c){document.documentElement.style.setProperty('--hue',c)}
+function setLang(v){
+  lang=v; const r=document.documentElement; r.dataset.lang=v; r.lang=v==='zh'?'zh-Hant':'en';
+  document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));
+}
+function headHTML(){
+  return `<div class="top"><div class="brand"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l15 8.5v17L20 37 5 28.5v-17z" fill="#18202a" stroke="#ff7a1a" stroke-width="2.5"/><path d="M13 14v12M27 14v12M13 20h14" stroke="#cfd8e1" stroke-width="3" stroke-linecap="round"/></svg><div><b>HONHO FACTORY QUEST</b><small>HONHO PRECISION INDUSTRY CORPORATION · 宏合精研</small></div></div>
+  <div class="lang" role="group" aria-label="Language">${LANGS.map(l=>`<button data-act="lang" data-v="${l}" aria-pressed="${lang===l}">${LANG_META[l]}</button>`).join('')}</div></div>`;
+}
+function bgFor(i){return ASSETS.stages[i]?`${BG(i)}<img class="bgimg" src="${ASSETS.stages[i]}" alt="" onerror="this.remove()">`:BG(i)}
+function trackInner(){return PSTATES.map((p,i)=>`<div class="tn ${i<S.prod?'done':i===S.prod?'cur':''}">${ic(p.icon)}<small>${LH(p.l)}</small></div>`).join('')}
+
+/* ---------- 畫面 ---------- */
+function viewStart(){
+  setHue('#ff7a1a');
+  return `${headHTML()}<div class="card-big"><div class="hero" style="--hue:#ff7a1a">${bgFor(1)}<div class="shade"></div><div class="heroprod">${ic('pRaw')}</div></div>
+  <div class="body"><h1>HONHO <em>FACTORY</em> QUEST</h1>
+  <p>${LH(z('跟著同一件鋁合金產品,走過 6 個關卡、19 道工序:從客戶圖面開始,鑄造、整理、CNC 精密加工、檢驗,最後出貨。','Follow one aluminum part through 6 stages and 19 processes: from the customer’s drawing to casting, finishing, CNC precision machining, inspection and shipping.'))}</p>
+  <div class="tags"><span>${T('tag')}</span></div>
+  <ul class="stagelist">${STAGES.map((s,i)=>`<li style="--c:${s.c}"><i></i>${i+1}. ${LH(s.t)}</li>`).join('')}</ul>
+  <button class="btn" data-act="start">${T('start')}</button></div></div><p class="note">${T('note')}</p>`;
+}
+function viewOrder(){
+  setHue('#38c9dc');
+  const row=(k,v)=>`<div><dt>${LH(k)}</dt><dd>${LH(v)}</dd></div>`;
+  return `${headHTML()}<div class="card-big"><div class="hero" style="--hue:#38c9dc">${bgFor(0)}<div class="shade"></div></div>
+  <div class="body"><div class="stageno">${LH(z('模擬客戶訂單','SIMULATED CUSTOMER ORDER'))}</div><h1>CUSTOMER ORDER #001</h1>
+  <div class="order"><div class="dwg">${ic('drawing')}</div><dl>
+   ${row(z('訂單編號','ORDER NO.'),'CUSTOMER ORDER #001')}
+   ${row(z('產品','PRODUCT'),z('鋁合金零件(示意產品)','Aluminum part (sample part)'))}
+   ${row(z('數量','QUANTITY'),z('100 件(模擬數量)','100 pcs (simulated)'))}
+   ${row(z('製程','PROCESS'),z('重力鑄造 + CNC 加工','Gravity casting + CNC machining'))}
+   ${row(z('品質要求','QUALITY'),z('尺寸及外觀檢驗','Dimensional and visual inspection'))}
+   ${row(z('依據','BASIS'),z('客戶提供的圖面及要求。宏合依圖面生產,不負責產品設計。','Customer drawing and requirements. HONHO produces to the drawing and does not design the product.'))}
+  </dl></div>
+  <p>${LH(z('這是遊戲用的模擬訂單,不是宏合的實際客戶訂單或生產數據。本訂單要求完成全部 19 道工序。你要親手把這件產品做出來、檢驗好、出貨。','This is a simulated order for the game, not a real HONHO order or production data. It requires all 19 processes. Make the part, inspect it and ship it yourself.'))}</p>
+  <button class="btn" data-act="accept">${T('accept')}</button></div></div>`;
+}
+const ACH=[
+ {id:'rookie',n:z('鑄造新手','Casting Rookie'),d:z('完成鋁合金熔解與鑄造關卡','Finished the melting and casting stage')},
+ {id:'master',n:z('鑄造操作達人','Casting Master'),d:z('第一次澆鑄就落在適當範圍','Poured within range on the first try')},
+ {id:'cnc',n:z('CNC 加工達人','CNC Machining Master'),d:z('CNC 加工關卡沒有操作錯誤','No mistakes in CNC machining')},
+ {id:'qc',n:z('品質檢驗員','Quality Inspector'),d:z('品質檢驗關卡最多一次失誤','At most one mistake in quality inspection')},
+ {id:'expert',n:z('生產流程專家','Process Expert'),d:z('全程操作失誤不超過 3 次','Three or fewer mistakes overall')},
+ {id:'ship',n:z('出貨任務達人','Shipping Ace'),d:z('包裝出貨關卡沒有失誤','No mistakes in packing and shipping')}];
+const ZONES=[z('圖面及模具準備區','Drawing & Tooling Area'),z('鑄造區','Casting Area'),z('鑄件後處理區','Casting Finishing Area'),z('CNC 加工區','CNC Machining Area'),z('品質檢驗區','Quality Inspection Area'),z('包裝及出貨區','Packing & Shipping Area')];
+const BADGE='<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="#18202a" stroke="#ffb15c" stroke-width="2.5"/><path d="M13 14v12M27 14v12M13 20h14" stroke="#ffb15c" stroke-width="3" stroke-linecap="round"/></svg>';
+const zonesHTML=n=>`<div class="zones">${ZONES.map((zn,i)=>`<div class="zn ${i<n?'on':''} ${i===n-1?'new':''}" style="--c:${STAGES[i].c}"><span>${i+1}</span>${LH(zn)}</div>`).join('')}</div>`;
+function stageDone(i){
+  const add=id=>{if(!S.ach.includes(id)){S.ach.push(id);S.newAch.push(id)}};
+  if(i===1){add('rookie'); if(S.pourMiss===0) add('master');}
+  if(i===3&&S.stageMiss[3]===0) add('cnc');
+  if(i===4&&S.stageMiss[4]<=1) add('qc');
+  if(i===5){ if(S.stageMiss[5]===0) add('ship'); if(S.miss<=3) add('expert'); }
+}
+const ANOM_L={lot:z('鋁料材質不符','Off-spec aluminum lot'),spectro:z('澆鑄中材質檢測異常','Out-of-range material check'),oot:z('CNC 加工尺寸超差','CNC dimension out of tolerance'),leak:z('氣密試漏發現洩漏','Leak found in leak test'),leakIso:z('洩漏品處理','Handling of the leaking part'),defect:z('外觀檢查','Visual inspection'),ship:z('出貨前核對','Pre-shipment check')};
+const ANOM_ORDER=['lot','spectro','oot','leak','leakIso','defect','ship'];
+function grade(){const sc=Math.max(0,100-S.miss*4);return {sc,g:sc>=96?'S':sc>=88?'A':sc>=76?'B':'C'}}
+function viewIntro(){
+  const st=STEPS[S.si].st, s=STAGES[st]; setHue(s.c);
+  const list=STEPS.map((x,i)=>({x,i})).filter(o=>o.x.st===st);
+  const ach=S.newAch.map(id=>ACH.find(a=>a.id===id)).map(a=>`<div class="achbar">${BADGE}<div><small>${T('achUnlocked')}</small><b>${LH(a.n)}</b></div></div>`).join('');
+  return `${headHTML()}${ach}<div class="card-big" style="--hue:${s.c}"><div class="hero">${bgFor(st)}<div class="shade"></div><div class="heroprod">${ic(PSTATES[S.prod].icon)}</div></div>
+  <div class="body"><div class="stageno">${T('stage')} ${st+1} / 6</div><h1>${LH(s.t)}</h1><p>${LH(s.sub)}</p>
+  <div class="stageno">${T('zones')}</div>${zonesHTML(st+1)}
+  <ul class="stagelist sm">${list.map(o=>`<li style="--c:${s.c}"><i></i><span><b>SOP ${String(o.i+1).padStart(2,'0')}</b> ${LH(o.x.t)}<span class="sub">${LH(o.x.sop)}</span></span></li>`).join('')}</ul>
+  <button class="btn" data-act="enter">${T('enter')}</button></div></div>`;
+}
+function railHTML(){return `<div class="rail" aria-hidden="true">${STEPS.map((x,i)=>`<span class="seg ${i<S.si?'done':i===S.si?'cur':''}" style="--c:${STAGES[x.st].c}"></span>`).join('')}</div>`}
+function viewPlay(){
+  const st=STEPS[S.si], sg=STAGES[st.st], phs=PHS(S.si), ph=phs[S.pi]; setHue(sg.c);
+  return `${headHTML()}${railHTML()}
+  <div class="railinfo"><span>${T('stage')} <b>${st.st+1}/6</b> · ${LH(sg.t)}</span><span>SOP <b>${String(S.si+1).padStart(2,'0')}/19</b></span></div>
+  <div class="track" id="track">${trackInner()}</div>
+  <div class="scene" id="scene">${bgFor(st.st)}<div class="play" id="play"></div></div>
+  <div class="panel"><div class="phead"><span class="sopno">SOP ${String(S.si+1).padStart(2,'0')}</span><h2>${LH(st.t)}</h2></div>
+  <p class="sop">${LH(st.sop)}${phs.length>1?` · ${T('act')} ${S.pi+1}/${phs.length}`:''}</p>
+  <p class="why"><b>${T('key')}</b>${LH(st.why)}</p>
+  <p class="task">${ph.q?LH(ph.q):''}</p><div class="fb" id="fb" role="status" aria-live="polite">${T('idle')}</div>
+  <div class="row"><button class="btn" id="next" data-act="next" hidden></button></div></div>`;
+}
+function viewEnd(){
+  setHue('#ff7a1a');
+  const gr=grade(), stats=S.rand;
+  const anomRows=ANOM_ORDER.filter(k=>k in S.anom).map(k=>{
+    const t=S.anom[k]; let label=ANOM_L[k];
+    let res=t===0?z('第一次就處理正確','Handled correctly on the first try'):z(`修正 ${t} 次後處理正確`,`Handled correctly after ${t} ${t===1?'retry':'retries'}`);
+    if(k==='defect'&&!stats.defectOn) res=t===0?z('無異常,正確判定合格','No defect, correctly passed'):z(`修正 ${t} 次後正確判定合格`,`Correctly passed after ${t} ${t===1?'retry':'retries'}`);
+    return `<div class="met"><span>${LH(label)}</span><b>${LH(res)}</b></div>`;}).join('');
+  const qual=[
+   [z('氣密試漏','Leak test'),z('洩漏品已隔離,合格品放行','Leaking part isolated, good parts released')],
+   [z('外觀檢查','Visual check'),stats.defectOn?z('異常品已找出並隔離','Defective part found and isolated'):z('判定合格','Passed')],
+   [z('尺寸檢驗','Dimensions'),z('樣品檢驗報告合格(示意資料)','Sample inspection report: pass (sample data)')]
+  ].map(r=>`<div class="met"><span>${LH(r[0])}</span><b>${LH(r[1])}</b></div>`).join('');
+  const ach=ACH.map(a=>`<div class="ach ${S.ach.includes(a.id)?'on':''}">${BADGE}<div><b>${LH(a.n)}</b><small>${LH(a.d)}</small></div></div>`).join('');
+  return `${headHTML()}<div class="card-big"><div class="hero" style="--hue:#c58bff">${bgFor(5)}<div class="shade"></div><div class="heroprod">${ic('pBox')}</div></div>
+  <div class="body"><span class="stamp">PRODUCT COMPLETED</span><h1>${LH(z('製造完成・準備交付','Made and ready to deliver'))}</h1>
+  <p><b>From Customer Drawing to Finished Product</b></p>
+  <div class="journey" aria-label="journey">${PSTATES.map(p=>`<div class="jn">${ic(p.icon)}<small>${LH(p.l)}</small></div>`).join('<span class="ar">➜</span>')}</div>
+  <div class="setl">
+   <div class="sethead"><h3>${LH(z('生產結算','Production Summary'))}</h3><span class="sample">${LH(z('示意評分 · 依正確操作、品質與異常處理計算,與速度無關','Sample score · based on correct operation, quality and issue handling, not speed'))}</span></div>
+   <div class="grade"><b>${gr.g}</b><span>${gr.sc} / 100</span></div>
+   <div class="met"><span>${LH(z('製程完成度','Process completion'))}</span><b>19 / 19 (100%)</b></div>
+   <div class="met"><span>${LH(z('任務完成數量','Order completed'))}</span><b>CUSTOMER ORDER #001 · ${LH(z('100 件(模擬)','100 pcs (simulated)'))}</b></div>
+   <div class="met"><span>${LH(z('操作失誤','Mistakes'))}</span><b>${S.miss}</b></div>
+   <h4>${LH(z('異常處理結果','Issue handling'))}</h4>${anomRows}
+   <h4>${LH(z('品質檢驗結果','Quality inspection'))}</h4>${qual}
+  </div>
+  <div class="setl"><div class="sethead"><h3>${LH(z('成就','Achievements'))}</h3></div><div class="achgrid">${ach}</div>
+   <div class="finalbadge">${BADGE}<div><small>HONHO FACTORY QUEST</small><b>${LH(z('完成徽章','Completion badge'))}</b></div></div></div>
+  <p><b>HONHO PRECISION INDUSTRY CORPORATION</b><br>Aluminum Gravity Casting · CNC Precision Machining</p>
+  <p>${LH(z('依客戶圖面及要求,提供鋁合金重力鑄造與 CNC 精密加工服務。','We provide aluminum gravity casting and CNC precision machining, built to your drawings and requirements.'))}</p>
+  <div class="sumcols">${STAGES.map((s,i)=>`<div style="--c:${s.c}"><h3>${i+1}. ${LH(s.t)}</h3><ol>${STEPS.map((x,j)=>({x,j})).filter(o=>o.x.st===i).map(o=>`<li><span class="n">${String(o.j+1).padStart(2,'0')}</span>${LH(o.x.t)}</li>`).join('')}</ol></div>`).join('')}</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="https://www.honho.com.tw/" target="_blank" rel="noopener">${T('site')}</a><button class="btn ghost" data-act="restart">${T('again')}</button></div></div></div>`;
+}
+
+function render(){
+  cleanups.forEach(f=>{try{f()}catch(e){}}); cleanups=[];
+  if(S.screen==='start') app.innerHTML=viewStart();
+  else if(S.screen==='order') app.innerHTML=viewOrder();
+  else if(S.screen==='intro') app.innerHTML=viewIntro();
+  else if(S.screen==='end') app.innerHTML=viewEnd();
+  else {app.innerHTML=viewPlay(); startPhase();}
+}
+
+/* ---------- 回饋與流程 ---------- */
+let fin=false;
+function setProd(n){
+  if(n<=S.prod) return; S.prod=n;
+  const tr=$('#track'); if(tr){tr.innerHTML=trackInner(); const c=tr.querySelector('.tn.cur'); if(c) c.classList.add('pop');}
+  const sc=$('#scene'); if(sc){
+    const old=sc.querySelector('.statepop'); if(old) old.remove();
+    const d=document.createElement('div'); d.className='statepop';
+    d.innerHTML=`${ic(PSTATES[n].icon)}<div><small>${T('statepop')}</small><b>${LH(PSTATES[n].l)}</b></div>`;
+    sc.appendChild(d); setTimeout(()=>d.remove(),2100);
+  }
+}
+function startPhase(){
+  fin=false;
+  const st=STEPS[S.si], phs=PHS(S.si), ph=phs[S.pi], scene=$('#scene'), fbEl=$('#fb'), nextBtn=$('#next');
+  const lastPh=S.pi===phs.length-1, lastStep=S.si===STEPS.length-1;
+  let phMiss=0;
+  const api={
+    done(msg){ if(fin) return; fin=true;
+      if(ph.anom) S.anom[ph.anom]=phMiss; if(ph.tag==='pour') S.pourMiss=phMiss;
+      if(ph.prod!=null) setProd(ph.prod);
+      fbEl.className='fb ok'; fbEl.innerHTML='✓ '+LH(msg)+(lastPh?`  ·  SOP ${String(S.si+1).padStart(2,'0')} ${T('complete')}`:'');
+      scene.classList.remove('flash'); void scene.offsetWidth; scene.classList.add('flash');
+      nextBtn.innerHTML=lastPh?(lastStep?T('finish'):T('nextStep')):T('nextPhase'); nextBtn.hidden=false; },
+    hint(msg,soft){ if(fin) return; if(!soft){phMiss++;S.miss++;S.stageMiss[st.st]++;} fbEl.className='fb hint'; fbEl.innerHTML=LH(msg)+' '+T('retry');
+      scene.classList.remove('shake'); void scene.offsetWidth; scene.classList.add('shake'); },
+    say(msg){ if(fin) return; fbEl.className='fb ok'; fbEl.innerHTML=LH(msg); },
+    cleanup(f){cleanups.push(f)},
+    later(fn,ms){const t=setTimeout(fn,ms);cleanups.push(()=>clearTimeout(t));return t}
+  };
+  PH[ph.k](ph,$('#play'),api);
+}
+function advance(){
+  if(!fin) return;
+  const phs=PHS(S.si), st=STEPS[S.si];
+  if(S.pi<phs.length-1){S.pi++;render();return;}
+  const endStage=(S.si===STEPS.length-1)||STEPS[S.si+1].st!==st.st;
+  if(endStage) stageDone(st.st);
+  if(S.si===STEPS.length-1){S.screen='end';render();window.scrollTo(0,0);return;}
+  S.si++;S.pi=0;S.screen=endStage?'intro':'play';render();window.scrollTo(0,0);
+}
+app.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const a=b.dataset.act;
+  if(a==='lang'){setLang(b.dataset.v);}
+  else if(a==='start'){S=fresh();S.screen='order';render();window.scrollTo(0,0);}
+  else if(a==='accept'){S.screen='intro';render();window.scrollTo(0,0);}
+  else if(a==='enter'){S.screen='play';S.pi=0;S.newAch=[];render();}
+  else if(a==='next'){advance();}
+  else if(a==='restart'){S=fresh();render();window.scrollTo(0,0);}
+});
+
+/* ---------- 拖曳(滑鼠、觸控、鍵盤都可用) ---------- */
+function enableDrag(el,tgt,onDrop,onMiss){
+  el._x=0;el._y=0; let id=null,sx=0,sy=0,ox=0,oy=0,moved=false;
+  const hit=()=>{const a=el.getBoundingClientRect(),b=tgt.getBoundingClientRect(),cx=a.left+a.width/2,cy=a.top+a.height/2;return cx>b.left-16&&cx<b.right+16&&cy>b.top-16&&cy<b.bottom+16};
+  const reset=()=>{el._x=0;el._y=0;el.style.transform=''};
+  el.addEventListener('pointerdown',e=>{if(el.dataset.lock)return;e.preventDefault();id=e.pointerId;try{el.setPointerCapture(id)}catch(_){}sx=e.clientX;sy=e.clientY;ox=el._x;oy=el._y;moved=false;el.classList.add('dragging')});
+  el.addEventListener('pointermove',e=>{if(id!==e.pointerId)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)+Math.abs(dy)>8)moved=true;el._x=ox+dx;el._y=oy+dy;el.style.transform=`translate(${el._x}px,${el._y}px)`;tgt.classList.toggle('over',hit())});
+  el.addEventListener('pointerup',e=>{if(id!==e.pointerId)return;id=null;tgt.classList.remove('over');el.classList.remove('dragging');if(!moved||hit())onDrop(el);else{reset();onMiss()}});
+  el.addEventListener('pointercancel',e=>{if(id!==e.pointerId)return;id=null;tgt.classList.remove('over');el.classList.remove('dragging');reset()});
+  el.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!el.dataset.lock){e.preventDefault();onDrop(el)}});
+}
+
+/* ---------- 互動類型 ---------- */
+const PH={
+  spot(ph,root,api){
+    const got=new Set();
+    root.innerHTML=`<div class="obj big" id="obj"><div class="ico">${ic(ph.icon)}</div>${ph.pts.map((p,i)=>`<button class="hot" data-i="${i}" style="left:${p.x}%;top:${p.y}%" aria-label="${L(p.l)}"></button>`).join('')}</div><div class="chips" id="chips"></div><div class="cap">${T('tapcallout')}</div>`;
+    const chips=$('#chips',root);
+    $('#obj',root).addEventListener('click',e=>{
+      const h=e.target.closest('.hot');
+      if(!h){api.hint(UI.miss,true);return;}
+      const i=+h.dataset.i; if(got.has(i)) return;
+      got.add(i); h.classList.add('on');
+      chips.insertAdjacentHTML('beforeend',`<span class="chip">✓ ${LH(ph.pts[i].l)}</span>`);
+      if(ph.pts[i].info) api.say(ph.pts[i].info);
+      if(got.size===ph.pts.length){
+        if(ph.after){$('.ico',root).innerHTML=ic(ph.after);root.querySelectorAll('.hot').forEach(x=>x.style.display='none');}
+        api.done(ph.done);
+      }
+    });
+  },
+  tap(ph,root,api){
+    let n=0;
+    root.innerHTML=`<button class="tapobj" id="t" aria-label="${L(ph.q)}">${ic(ph.icon)}</button><div class="bar"><i id="bf"></i></div><div class="cap">${LH(UI.tapx(ph.n))}</div>`;
+    const t=$('#t',root), bf=$('#bf',root);
+    t.addEventListener('click',()=>{
+      if(n>=ph.n) return; n++; bf.style.width=(n/ph.n*100)+'%';
+      t.classList.remove('bump'); void t.offsetWidth; t.classList.add('bump');
+      if(n>=ph.n){t.disabled=true;if(ph.after)t.innerHTML=ic(ph.after);api.done(ph.done);}
+    });
+  },
+  pick(ph,root,api){
+    root.innerHTML=`${ph.hdr?`<div class="hdr">${ic(ph.hdr)}</div>`:''}<div class="opts">${ph.opts.map((o,i)=>`<button class="card" data-i="${i}">${ic(o.icon)}<b>${LH(o.l)}</b>${o.s?`<small>${LH(o.s)}</small>`:''}</button>`).join('')}</div>`;
+    root.addEventListener('click',e=>{
+      const c=e.target.closest('.card'); if(!c||c.disabled) return;
+      const o=ph.opts[+c.dataset.i];
+      if(o.ok){c.classList.add('ok');root.querySelectorAll('.card').forEach(x=>x.disabled=true);api.done(ph.done);}
+      else{c.classList.remove('bad');void c.offsetWidth;c.classList.add('bad');c.disabled=true;api.hint(o.hint);}
+    });
+  },
+  order(ph,root,api){
+    let next=0; const n=ph.items.length;
+    const idx=ph.items.map((_,i)=>i).reverse();
+    root.innerHTML=`<div class="steps">${idx.map(i=>`<button class="stepchip" data-i="${i}">${ic(ph.items[i].icon)}<span class="no"></span><span>${LH(ph.items[i].l)}</span></button>`).join('')}</div><div class="cap">1 → ${n}</div>`;
+    root.addEventListener('click',e=>{
+      const c=e.target.closest('.stepchip'); if(!c||c.classList.contains('ok')) return;
+      if(+c.dataset.i===next){
+        next++; c.classList.add('ok'); c.querySelector('.no').textContent=next;
+        if(next===n) api.done(ph.done);
+      } else {
+        c.classList.remove('bad');void c.offsetWidth;c.classList.add('bad');
+        api.hint(ph.hint||UI.wrongOrder);
+      }
+    });
+  },
+  hold(ph,root,api){
+    const fx=ph.fx;
+    const layers=fx==='wipe'?`<div class="l0">${ic(ph.from)}</div><div class="l1" style="clip-path:inset(0 100% 0 0)">${ic(ph.to)}</div>`
+      :fx==='rise'?`<div class="l1" style="clip-path:inset(100% 0 0 0)">${ic(ph.icon)}</div>`
+      :`<div class="l0">${ic(ph.icon)}</div>`;
+    root.innerHTML=`<div class="obj" id="ho">${layers}</div><div class="bar"><i id="bf"></i></div><button class="holdbtn" id="hb">${T('hold')}</button>`;
+    const ho=$('#ho',root), bf=$('#bf',root), hb=$('#hb',root), l0=$('.l0',root), l1=$('.l1',root);
+    const paint=p=>{
+      bf.style.width=(p*100)+'%';
+      if(fx==='wipe') l1.style.clipPath=`inset(0 ${100-p*100}% 0 0)`;
+      else if(fx==='rise') l1.style.clipPath=`inset(${100-p*100}% 0 0 0)`;
+      else if(fx==='glow') l0.style.filter=`brightness(${1+p*.5}) drop-shadow(0 0 ${p*22}px #ff7a1a)`;
+    };
+    let p=0,down=false,last=0,raf=0,ended=false;
+    const tick=t=>{
+      if(!last) last=t; const dt=Math.min(.1,(t-last)/1000); last=t;
+      if(down&&!ended){p=Math.min(1,p+dt/ph.secs); paint(p);
+        if(p>=1){ended=true;ho.classList.remove('run');hb.disabled=true;api.done(ph.done);return;}}
+      raf=requestAnimationFrame(tick);
+    };
+    const on=e=>{e.preventDefault();down=true;ho.classList.add('run')};
+    const off=()=>{down=false;ho.classList.remove('run')};
+    hb.addEventListener('pointerdown',on);
+    ['pointerup','pointercancel','pointerleave'].forEach(v=>hb.addEventListener(v,off));
+    hb.addEventListener('contextmenu',e=>e.preventDefault());
+    hb.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){on(e)}});
+    hb.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){off()}});
+    raf=requestAnimationFrame(tick); api.cleanup(()=>cancelAnimationFrame(raf));
+  },
+  pour(ph,root,api){
+    const b0=172-64*ph.band[0]/100, b1=172-64*ph.band[1]/100;
+    root.innerHTML=`<svg class="poursvg" viewBox="0 0 300 200" aria-hidden="true">
+      <rect x="130" y="70" width="140" height="118" rx="6" fill="${ST}"/><rect x="188" y="70" width="24" height="38" fill="#0f141a"/><rect x="158" y="108" width="84" height="64" rx="4" fill="#0f141a"/>
+      <rect id="pf" x="158" y="172" width="84" height="0" fill="${MO}"/><rect id="ps" x="194" y="70" width="12" height="0" fill="${MO}"/>
+      <path d="M150 ${b0}h100M150 ${b1}h100" stroke="#4fd08a" stroke-width="2" stroke-dasharray="5 4"/>
+      <rect id="st" x="198" y="56" width="4" height="0" fill="#ffb15c"/>
+      <g id="lad" style="transform-origin:170px 45px;transform-box:view-box"><rect x="70" y="38" width="76" height="6" fill="#8d9bab"/><path d="M140 40h60a30 30 0 0 1-60 0z" fill="#3a4757"/><ellipse cx="170" cy="40" rx="30" ry="4" fill="${MO}"/></g></svg>
+      <button class="holdbtn" id="hb">${T('pour')}</button>`;
+    const pf=$('#pf',root), ps=$('#ps',root), st=$('#st',root), lad=$('#lad',root), hb=$('#hb',root);
+    let v=0,down=false,last=0,raf=0,ended=false;
+    const paint=()=>{pf.setAttribute('y',172-64*v/100);pf.setAttribute('height',64*v/100);
+      ps.setAttribute('height',down&&v>0?38:0);st.setAttribute('height',down?(v>0?52:0):0);
+      lad.style.transform=`rotate(${down?Math.min(32,v*1.2+8):0}deg)`;};
+    const release=()=>{
+      if(!down||ended) return; down=false; paint();
+      if(v>=ph.band[0]&&v<=ph.band[1]){ended=true;hb.disabled=true;api.done(ph.done);}
+      else{api.hint(v<ph.band[0]?ph.low:ph.high);v=0;paint();}
+    };
+    const tick=t=>{
+      if(!last) last=t; const dt=Math.min(.1,(t-last)/1000); last=t;
+      if(down&&!ended){v=Math.min(100,v+dt*36);paint();if(v>=100) release();}
+      raf=requestAnimationFrame(tick);
+    };
+    hb.addEventListener('pointerdown',e=>{e.preventDefault();if(ended)return;down=true;paint();});
+    ['pointerup','pointercancel','pointerleave'].forEach(x=>hb.addEventListener(x,release));
+    hb.addEventListener('contextmenu',e=>e.preventDefault());
+    hb.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!down&&!ended){down=true;paint();}});
+    hb.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')release();});
+    raf=requestAnimationFrame(tick); api.cleanup(()=>cancelAnimationFrame(raf));
+  },
+  cast(ph,root,api){
+    root.innerHTML=`<svg class="castsvg" viewBox="0 0 300 190" aria-hidden="true">
+      <g><rect x="70" y="110" width="160" height="56" rx="4" fill="${ST}"/></g>
+      <g id="top" style="transition:transform .8s ease"><rect x="70" y="56" width="160" height="54" rx="4" fill="${ST}"/><rect x="146" y="38" width="8" height="72" fill="#0f141a"/></g>
+      <g id="cav" style="transition:opacity .3s"><rect x="104" y="92" width="92" height="36" rx="3" fill="#0f141a"/>
+        <rect id="al" x="104" y="92" width="92" height="36" rx="3" fill="#a3b1c1" opacity="0" style="transition:opacity 1.4s"/>
+        <rect id="mol" x="104" y="92" width="92" height="36" rx="3" fill="${MO}" style="transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);transition:transform .9s ease-out,opacity 1.4s"/></g>
+      <svg id="cst" x="100" y="8" width="100" height="108" viewBox="0 0 120 120" style="opacity:0;transition:opacity .4s,transform .7s">${ICON.pRaw}</svg></svg>
+      <div class="cap" id="cc">&nbsp;</div>`;
+    const g=id=>$('#'+id,root), cc=g('cc');
+    const say=(zh,en)=>{cc.innerHTML=LH(z(zh,en))};
+    api.later(()=>{g('mol').style.transform='scaleY(1)';say('① 鋁液流入模穴,填滿','① Molten aluminum fills the cavity')},80);
+    api.later(()=>{g('mol').style.opacity='0';g('al').style.opacity='1';say('② 模具冷卻,鋁液凝固','② The mold cools and the metal solidifies')},1200);
+    api.later(()=>{g('cav').style.opacity='0';g('top').style.transform='translateY(-56px)';g('cst').style.opacity='1';say('③ 開模','③ The mold opens')},2800);
+    api.later(()=>{g('cst').style.transform='translateY(-14px)';say('④ 取出粗鑄件','④ The raw casting is removed')},3800);
+    api.later(()=>api.done(ph.done),4700);
+  },
+  slider(ph,root,api){
+    const p2=(v,r)=>{const a=(180-v*1.8)*Math.PI/180;return [(100+r*Math.cos(a)).toFixed(1),(100-r*Math.sin(a)).toFixed(1)]};
+    const arc=(a,b,c)=>{const p=p2(a,78),q=p2(b,78);return `<path d="M${p[0]} ${p[1]}A78 78 0 0 1 ${q[0]} ${q[1]}" stroke="${c}" stroke-width="12" fill="none"/>`};
+    root.innerHTML=`<svg class="dial" viewBox="0 0 200 120" aria-hidden="true">${arc(0,ph.band[0],'#38c9dc')}${arc(ph.band[0],ph.band[1],'#4fd08a')}${arc(ph.band[1],100,'#ff5d5d')}<line id="nd" x1="100" y1="100" x2="100" y2="34" stroke="#e8edf2" stroke-width="4" stroke-linecap="round"/><circle cx="100" cy="100" r="7" fill="#e8edf2"/></svg>
+    <input class="rg" id="rg" type="range" min="0" max="100" value="12" aria-label="${L(ph.q)}"><div class="cap tag">${LH(UI.sample)}</div><button class="btn" id="lk">${T('lock')}</button>`;
+    const rg=$('#rg',root), nd=$('#nd',root);
+    const upd=()=>{const p=p2(+rg.value,66);nd.setAttribute('x2',p[0]);nd.setAttribute('y2',p[1]);};
+    rg.addEventListener('input',upd); upd();
+    $('#lk',root).addEventListener('click',()=>{
+      const v=+rg.value;
+      if(v>=ph.band[0]&&v<=ph.band[1]){rg.disabled=true;$('#lk',root).disabled=true;api.done(ph.done);}
+      else api.hint(v<ph.band[0]?ph.low:ph.high);
+    });
+  },
+  drag(ph,root,api){
+    const items=ph.items, n=items.length; let placed=0;
+    root.innerHTML=`<div class="dz"><div class="dz-src">${items.map((it,i)=>`<div class="dgi" data-i="${i}" tabindex="0" role="button" aria-label="${L(ph.q)}">${ic(it.icon)}</div>`).join('')}</div><div class="dz-arrow" aria-hidden="true">➜</div><div class="dz-tgt" id="tg"><div class="tgi" id="tgi">${ic(ph.target.icon)}</div><div class="tgl">${LH(ph.target.l)}</div></div></div><div class="bar" id="bar" style="visibility:hidden"><i id="bf"></i></div><div class="cap" id="cp">${T('dragcap')}</div>`;
+    const tg=$('#tg',root);
+    const finish=()=>{
+      if(!ph.fx){api.done(ph.done);return;}
+      $('#tgi',root).classList.add(ph.fx.cls||'hot'); $('#cp',root).innerHTML=LH(ph.fx.cap);
+      $('#bar',root).style.visibility='visible'; const bf=$('#bf',root);
+      bf.style.transition=`width ${ph.fx.ms}ms linear`; requestAnimationFrame(()=>requestAnimationFrame(()=>bf.style.width='100%'));
+      api.later(()=>api.done(ph.done),ph.fx.ms+80);
+    };
+    const drop=el=>{
+      if(el.dataset.lock) return; el.dataset.lock='1';
+      const a=el.getBoundingClientRect(), b=tg.getBoundingClientRect();
+      const dx=(b.left+b.width/2)-(a.left+a.width/2), dy=(b.top+b.height/2)-(a.top+a.height/2);
+      el.classList.remove('dragging'); el.style.transform=`translate(${el._x+dx}px,${el._y+dy}px) scale(.5)`; el.style.opacity='0';
+      placed++; tg.classList.remove('over');
+      if(placed===n) api.later(finish,260);
+    };
+    root.querySelectorAll('.dgi').forEach(el=>enableDrag(el,tg,drop,()=>api.hint(UI.dragmiss,true)));
+  },
+  cnc(ph,root,api){
+    const lathe=ph.type==='lathe', tp=lathe?{x:30,y:50}:{x:45,y:62};
+    const MACH=lathe
+      ?`<svg class="m" viewBox="0 0 300 200" aria-hidden="true"><rect x="0" y="150" width="300" height="50" fill="#1b2430"/><rect x="10" y="50" width="62" height="92" rx="4" fill="${ST}"/><rect x="72" y="72" width="14" height="52" fill="#8d9bab"/><rect x="10" y="142" width="280" height="10" fill="#3a4757"/><rect x="226" y="70" width="62" height="72" rx="4" fill="${ST}"/><path d="M226 96h-12" stroke="#8d9bab" stroke-width="6"/><path d="M86 96h128" stroke="#3a4757" stroke-width="2" stroke-dasharray="6 4"/></svg>`
+      :`<svg class="m" viewBox="0 0 300 200" aria-hidden="true"><rect x="0" y="154" width="300" height="46" fill="#1b2430"/><rect x="40" y="148" width="210" height="14" rx="3" fill="#3a4757"/><path d="M60 154h170" stroke="#5b6a7c" stroke-width="2" stroke-dasharray="14 8"/><rect x="236" y="14" width="46" height="136" fill="${ST}"/><rect x="104" y="18" width="150" height="30" rx="3" fill="#3a4757"/><rect x="128" y="48" width="44" height="20" fill="#2c3846"/></svg>`;
+    const TOOL=lathe?'<svg viewBox="0 0 60 30"><rect x="20" y="4" width="40" height="22" fill="#5b6a7c"/><path d="M20 8L2 15L20 22z" fill="#ffb15c"/></svg>':'<svg viewBox="0 0 20 60"><rect x="6" y="0" width="8" height="34" fill="#8d9bab"/><path d="M5 34h10l-2 20h-6z" fill="#ffb15c"/></svg>';
+    root.innerHTML=`<div class="cnc" id="cnc">${MACH}<div class="ctg" id="ctg" style="left:${tp.x}%;top:${tp.y}%"></div><div class="cwp" id="wp" tabindex="0" role="button" aria-label="${L(ph.q)}" style="left:5%;top:60%">${ic(ph.from)}</div><div class="ctool" id="tl" style="width:${lathe?'24%':'7%'};aspect-ratio:${lathe?'2/1':'1/3'};left:${lathe?'86%':'43%'};top:${lathe?'40%':'14%'}">${TOOL}</div></div><div class="cncui" id="ui"><div class="cap">${T('dragcap')}</div></div>`;
+    const cnc=$('#cnc',root), wp=$('#wp',root), tl=$('#tl',root), ui=$('#ui',root), tg=$('#ctg',root);
+    const W=()=>cnc.clientWidth, H=()=>cnc.clientHeight;
+    const wpC=()=>({x:wp.offsetLeft+wp.offsetWidth/2,y:wp.offsetTop+wp.offsetHeight/2,w:wp.offsetWidth});
+    const toolAt=(x,y)=>{tl.style.left=x+'px';tl.style.top=y+'px'};
+    const spark=(x,y)=>{const s=document.createElement('span');s.className='spark';s.style.left=x+'px';s.style.top=y+'px';s.style.setProperty('--dx',(Math.random()*60+10)+'px');s.style.setProperty('--dy',(Math.random()*50-25)+'px');cnc.appendChild(s);setTimeout(()=>s.remove(),600)};
+    const park=()=>{ if(lathe) toolAt(W()*.86,wpC().y-tl.offsetHeight/2); else toolAt(wpC().x-tl.offsetWidth/2,H()*.08); };
+    let state='drag';
+    const mounted=()=>{
+      state='ready';
+      ui.innerHTML=`<button class="btn" id="go">${T('go')}</button>`;
+      $('#go',root).addEventListener('click',run);
+    };
+    const onDrop=el=>{
+      if(state!=='drag') return; state='mount'; wp.dataset.lock='1'; wp.classList.remove('dragging');
+      wp.style.transition='none'; wp.style.left=(wp.offsetLeft+wp._x)+'px'; wp.style.top=(wp.offsetTop+wp._y)+'px'; wp.style.transform=''; wp._x=wp._y=0; void wp.offsetWidth; wp.style.transition='';
+      wp.style.left=(tp.x*W()/100-wp.offsetWidth/2)+'px'; wp.style.top=(tp.y*H()/100-wp.offsetHeight/2)+'px';
+      tg.style.display='none'; api.later(()=>{park();mounted()},420);
+    };
+    enableDrag(wp,tg,onDrop,()=>api.hint(UI.dragmiss,true));
+    const progress=ms=>{ui.innerHTML=`<div class="bar"><i id="bf" style="transition:width ${ms}ms linear"></i></div><div class="cap">${LH(lathe?z('車削中…','Turning…'):z('銑削中…','Milling…'))}</div>`;const bf=$('#bf',root);requestAnimationFrame(()=>requestAnimationFrame(()=>bf.style.width='100%'))};
+    const finishRun=()=>{
+      state='out'; wp.classList.remove('spin'); wp.innerHTML=ic(ph.to); wp.querySelectorAll('.hole').forEach(h=>h.remove());
+      park(); wp.classList.add('ready'); wp.dataset.lock=''; wp.style.cursor='pointer';
+      ui.innerHTML=`<div class="cap tag">${T('takeout')}</div>`;
+      const out=()=>{ if(state!=='out') return; state='done'; wp.classList.remove('ready'); wp.dataset.lock='1';
+        wp.style.left=(W()*.74)+'px'; wp.style.top=(H()*.62)+'px'; api.later(()=>api.done(ph.done),420); };
+      wp.addEventListener('click',out); wp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();out()}});
+    };
+    function run(){
+      if(state!=='ready') return; state='run';
+      const c=wpC();
+      if(lathe){
+        progress(2600); wp.classList.add('spin');
+        const edge=c.x+c.w/2;
+        toolAt(edge-6,c.y-tl.offsetHeight/2);
+        const iv=setInterval(()=>spark(edge,c.y+(Math.random()*30-15)),90); api.cleanup(()=>clearInterval(iv));
+        api.later(()=>clearInterval(iv),2200);
+        api.later(finishRun,2700);
+      } else {
+        progress(3400);
+        const P=[[.34,.44],[.66,.44],[.34,.76],[.66,.76]];
+        P.forEach((p,i)=>{
+          const hx=c.x-c.w/2+p[0]*c.w, hy=c.y-c.w/2+p[1]*c.w, tw=tl.offsetWidth, th=tl.offsetHeight;
+          api.later(()=>toolAt(hx-tw/2,hy-th*.9-22),i*800+20);
+          api.later(()=>toolAt(hx-tw/2,hy-th*.9),i*800+300);
+          api.later(()=>{const d=document.createElement('span');d.className='hole';d.style.left=(p[0]*100)+'%';d.style.top=(p[1]*100)+'%';wp.appendChild(d);for(let k=0;k<4;k++)spark(hx,hy)},i*800+520);
+          api.later(()=>toolAt(hx-tw/2,hy-th*.9-22),i*800+680);
+        });
+        api.later(finishRun,4*800+100);
+      }
+    }
+  },
+  compare(ph,root,api){
+    root.innerHTML=`<div class="cmp" id="cmp"><div class="cl">${ic('pMach')}</div><div class="cl" id="cb" style="clip-path:inset(0 50% 0 0)">${ic('pClean')}</div><div class="cdiv" id="cd" style="left:50%"></div><span class="ctag l">${LH(z('鑄造後','As-cast'))}</span><span class="ctag r">${LH(z('CNC 加工後','After CNC'))}</span></div>
+    <input class="rg" id="rg" type="range" min="0" max="100" value="50" aria-label="${L(ph.q)}">
+    <div class="chips" id="ft"><span class="chip off">${LH(z('外型','Shape'))}</span><span class="chip off">${LH(z('孔位','Holes'))}</span><span class="chip off">${LH(z('平面與加工面','Machined faces'))}</span></div><div class="cap">${T('slide')}</div>`;
+    const rg=$('#rg',root), cb=$('#cb',root), cd=$('#cd',root); let a=false,b=false;
+    rg.addEventListener('input',()=>{
+      const v=+rg.value; cb.style.clipPath=`inset(0 ${100-v}% 0 0)`; cd.style.left=v+'%';
+      if(v>=92) a=true; if(v<=8){b=true; root.querySelectorAll('.chip').forEach(c=>c.classList.remove('off'));}
+      if(a&&b){rg.disabled=true;api.done(ph.done);}
+    });
+  },
+  find(ph,root,api){
+    const P=[[64,42],[30,66],[58,84]], d=ph.on?P[ph.pos]:null;
+    root.innerHTML=`<div class="obj big" id="obj"><div class="ico">${ic(ph.icon)}</div>${d?`<i class="defect" style="left:${d[0]}%;top:${d[1]}%"></i>`:''}</div><div class="cap">${T('findcap')}</div><button class="btn ghost" id="okb">${T('passbtn')}</button>`;
+    const obj=$('#obj',root);
+    obj.addEventListener('click',e=>{
+      if(fin) return;
+      const r=obj.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*100, y=(e.clientY-r.top)/r.height*100;
+      if(d&&Math.hypot(x-d[0],y-d[1])<14){obj.insertAdjacentHTML('beforeend',`<i class="ring" style="left:${d[0]}%;top:${d[1]}%"></i>`);$('#okb',root).disabled=true;api.done(ph.doneBad);}
+      else api.hint(d?ph.missBad:ph.missOk);
+    });
+    $('#okb',root).addEventListener('click',()=>{ if(fin) return; if(!d){obj.style.outline='2px solid var(--ok)';api.done(ph.doneOk);} else api.hint(ph.passBad); });
+  },
+  report(ph,root,api){
+    root.innerHTML=`<button class="tapobj" id="t" aria-label="${L(ph.q)}">${ic('clip')}</button><div class="cap">${LH(UI.tapx(1))}</div>`;
+    $('#t',root).addEventListener('click',()=>{
+      root.innerHTML=`<div class="rep"><span class="sample">${LH(z('示意資料 · 非宏合實際檢驗紀錄','SAMPLE DATA · not an actual HONHO inspection record'))}</span>
+      <h4>${LH(z('樣品檢驗報告(示意)','Sample Inspection Report (illustrative)'))}</h4>
+      <div class="tw"><table><thead><tr><th>${LH(z('檢驗項目','Item'))}</th><th>${LH(z('圖面值','Nominal'))}</th><th>${LH(z('公差','Tol.'))}</th><th>${LH(z('量測值','Measured'))}</th><th>${LH(z('判定','Result'))}</th></tr></thead>
+      <tbody>${ph.rows.map(r=>`<tr><td>${LH(r.i)}</td><td>${r.nom}</td><td>${r.tol}</td><td>${r.v}</td><td class="ok">OK ✓</td></tr>`).join('')}</tbody></table></div>
+      <div class="pass">${LH(z('合格 PASS','PASS'))}</div></div>`;
+      api.done(ph.done);
+    });
+  }
+};
+
+setLang(lang);
+render();
+</script>
+
+</body></html>
